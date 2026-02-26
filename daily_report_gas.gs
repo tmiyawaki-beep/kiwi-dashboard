@@ -13,10 +13,10 @@
 //        SLACK_WEBHOOK_URL  = https://hooks.slack.com/services/...
 //   5. タイムゾーンを Asia/Tokyo に設定
 //   6. 関数「testDailyReport」を実行 → Gmail権限を許可
-//   7. 関数「setupDailyReportTrigger」を実行 → 毎朝9時の自動実行が設定される
+//   7. 関数「setupDailyReportTrigger」を実行 → 毎朝8時の自動実行が設定される
 //
 // 【実行後の動作】
-//   ・毎朝9時: 業界情報を収集 → Claude がレポート生成
+//   ・毎朝8時: 業界情報を収集 → Claude がレポート生成
 //             → t.miyawaki@lime-fit.com にメール送信
 //             → Slack に完了通知
 //   ・送信済みレポートはスプレッドシートの「レポート履歴」シートに蓄積
@@ -70,7 +70,7 @@ var RPT_QUERIES = [
 ];
 
 // ================================================================
-// メイン関数（毎朝9時にトリガーから呼ばれる）
+// メイン関数（毎朝8時にトリガーから呼ばれる）
 // ================================================================
 function generateDailyReport() {
   var props  = PropertiesService.getScriptProperties();
@@ -436,18 +436,18 @@ function setupDailyReportTrigger() {
     }
   }
 
-  // 毎朝9時（Asia/Tokyo）
+  // 毎朝8時（Asia/Tokyo）
   ScriptApp.newTrigger('generateDailyReport')
     .timeBased()
     .everyDays(1)
-    .atHour(9)
+    .atHour(8)
     .create();
 
-  Logger.log('✅ トリガー設定完了: 毎朝9時に generateDailyReport を実行');
+  Logger.log('✅ トリガー設定完了: 毎朝8時に generateDailyReport を実行');
 
   var slack = PropertiesService.getScriptProperties().getProperty('SLACK_WEBHOOK_URL') || '';
   try {
     rpt_postSlack(slack,
-      '✅ 日次レポート トリガー設定完了\n毎朝9時に ' + RPT_TO + ' へ自動配信します');
+      '✅ 日次レポート トリガー設定完了\n毎朝8時に ' + RPT_TO + ' へ自動配信します');
   } catch (e) {}
 }
