@@ -1309,48 +1309,85 @@
             }
         }
 
-        // ===== AIコンサルタント機能 =====
+        // ===== AIコンサルタント機能（Anthropic API 直接呼び出し・サーバー不要）=====
         let _consultStoreName = null;
+        const _ALERT_LBL = {
+            sales:'月間売上が目標未達', newGuest:'新規客数が目標未達',
+            repeatGuest:'リピート客数が目標未達', nextRes:'次回予約率が低い（35%以下）',
+            unitPrice:'客単価が目標未達', servicePrice:'施術単価が低い（¥4,800以下）',
+            ticket:'回数券販売率が低い', product:'物販率が低い'
+        };
+
+        function _showApiKeySetup(body) {
+            body.innerHTML =
+                '<div style="padding:1rem;background:#f0f9ff;border-radius:1rem;border:1.5px solid #bae6fd">' +
+                '<p style="font-size:13px;font-weight:900;color:#0369a1;margin-bottom:10px">' +
+                '<i class="fas fa-key" style="margin-right:6px"></i>APIキーを設定してください</p>' +
+                '<p style="font-size:11px;color:#64748b;line-height:1.8;margin-bottom:12px">' +
+                'AnthropicのAPIキー（sk-ant-...）を入力すると<br>スマホ・PCどこでもAIコンサルタントが使えます。<br>' +
+                '<a href="https://console.anthropic.com" target="_blank" style="color:#0369a1">console.anthropic.com</a> で取得できます。</p>' +
+                '<input id="api-key-input" type="password" placeholder="sk-ant-api03-..." ' +
+                'style="width:100%;padding:10px 12px;border-radius:0.8rem;border:1.5px solid #cbd5e1;' +
+                'font-size:12px;font-family:monospace;margin-bottom:10px;box-sizing:border-box">' +
+                '<button onclick="_saveApiKey()" ' +
+                'style="width:100%;padding:10px;border-radius:0.8rem;background:#0f172a;color:white;' +
+                'border:none;font-size:12px;font-weight:900;cursor:pointer">' +
+                '<i class="fas fa-save" style="margin-right:6px"></i>保存して使う</button></div>';
+        }
+
+        function _saveApiKey() {
+            const input = document.getElementById('api-key-input');
+            const key = (input ? input.value : '').trim();
+            if (!key || !key.startsWith('sk-')) {
+                alert('APIキーは「sk-」から始まります。正しいキーを入力してください。');
+                return;
+            }
+            localStorage.setItem('kiwi_anthropic_key', key);
+            openConsultModal(_consultStoreName); // リフレッシュ
+        }
+
+        function _clearApiKey() {
+            if (!confirm('APIキーを削除しますか？')) return;
+            localStorage.removeItem('kiwi_anthropic_key');
+            openConsultModal(_consultStoreName);
+        }
 
         function openConsultModal(storeName) {
             _consultStoreName = storeName;
             const data = consultDataMap[storeName];
             if (!data) return;
 
-            const overlay = document.getElementById('ai-modal-overlay');
-            overlay.style.display = 'flex';
+            document.getElementById('ai-modal-overlay').style.display = 'flex';
             document.getElementById('ai-modal-store').textContent = storeName;
-
-            const alertLabels = {
-                sales:        '月間売上が目標未達',
-                newGuest:     '新規客数が目標未達',
-                repeatGuest:  'リピート客数が目標未達',
-                nextRes:      '次回予約率が低い（35%以下）',
-                unitPrice:    '客単価が目標未達',
-                servicePrice: '施術単価が低い（¥4,800以下）',
-                ticket:       '回数券販売率が低い',
-                product:      '物販率が低い',
-            };
 
             const badgesHtml = Object.entries(data.alerts)
                 .filter(([k, v]) => v)
                 .map(([k]) =>
                     `<span style="display:inline-flex;align-items:center;gap:4px;margin:3px 4px 3px 0;padding:3px 10px;background:#fff0f0;border-radius:99px;color:#ef4444;font-size:9px;font-weight:900">` +
-                    `<span class="alert-dot" style="width:5px;height:5px;flex-shrink:0"></span>` +
-                    `${alertLabels[k] || k}</span>`
+                    `<span class="alert-dot" style="width:5px;height:5px;flex-shrink:0"></span>${_ALERT_LBL[k]||k}</span>`
                 ).join('');
 
             document.getElementById('ai-modal-alerts').innerHTML =
                 '<p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px">アラート中の項目</p>' +
                 badgesHtml;
 
-            document.getElementById('ai-modal-body').innerHTML =
-                '<p style="color:#94a3b8;text-align:center;padding:2rem 0;font-size:12px">' +
-                '「AIアドバイスを取得」を押すと改善アクションを生成します</p>';
+            const apiKey = localStorage.getItem('kiwi_anthropic_key');
+            const body   = document.getElementById('ai-modal-body');
+            const btn    = document.getElementById('ai-run-btn');
 
-            const btn = document.getElementById('ai-run-btn');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-robot"></i> AIアドバイスを取得';
+            if (!apiKey) {
+                _showApiKeySetup(body);
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-robot"></i> AIアドバイスを取得';
+            } else {
+                body.innerHTML =
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+                    '<p style="font-size:10px;color:#10b981;font-weight:900"><i class="fas fa-check-circle" style="margin-right:4px"></i>APIキー設定済み</p>' +
+                    '<button onclick="_clearApiKey()" style="font-size:9px;color:#94a3b8;background:none;border:none;cursor:pointer;font-weight:900">キーを変更</button></div>' +
+                    '<p style="color:#94a3b8;text-align:center;padding:1.5rem 0;font-size:12px">「AIアドバイスを取得」を押すと改善アクションを生成します</p>';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-robot"></i> AIアドバイスを取得';
+            }
         }
 
         function closeConsultModal() {
@@ -1360,59 +1397,86 @@
 
         async function runConsult() {
             if (!_consultStoreName) return;
-            const data = consultDataMap[_consultStoreName];
+            const data   = consultDataMap[_consultStoreName];
             if (!data) return;
+            const apiKey = localStorage.getItem('kiwi_anthropic_key');
+            if (!apiKey) { _showApiKeySetup(document.getElementById('ai-modal-body')); return; }
 
             const btn  = document.getElementById('ai-run-btn');
             const body = document.getElementById('ai-modal-body');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> 分析中...';
             body.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;font-size:12px">' +
-                             '<i class="fas fa-circle-notch fa-spin"></i> AIが分析しています...</p>';
+                             '<i class="fas fa-circle-notch fa-spin"></i> AIが分析しています…</p>';
+
+            // プロンプト構築
+            const alertText = Object.entries(data.alerts).filter(([k,v])=>v)
+                .map(([k])=>'  ・'+(_ALERT_LBL[k]||k)).join('\n') || '  （なし）';
+            const kpiText = Object.entries(data.kpis)
+                .map(([k,v])=>'  ・'+k+': '+v).join('\n') || '  （データなし）';
+            const prompt =
+`あなたは美容サロン（眉毛・まつ毛パーマ・マツエク専門サロン）の経営コンサルタントです。
+サロンのKPIデータを見て、今すぐ実行できる具体的な改善アクションを提案してください。
+
+## 対象店舗
+${data.store}（${data.category}）
+
+## 現在アラートになっている項目
+${alertText}
+
+## 現在のKPI数値
+${kpiText}
+
+---
+上記を踏まえ、今週・今月中に実行できる具体的な改善アクションを **3〜5点** 提案してください。
+出力形式：
+- 各アクションは **太字タイトル** ＋ 1〜2行の説明
+- サロンオーナーがスタッフに直接指示できるレベルの具体性
+- 効果が高い順に並べる
+- 日本語で回答`;
 
             try {
-                const resp = await fetch('http://localhost:8765/consult', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        store:    data.store,
-                        category: data.category,
-                        alerts:   Object.entries(data.alerts).filter(([k,v]) => v).map(([k]) => k),
-                        kpis:     data.kpis
+                const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-allow-browser': 'true',
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-opus-4-6',
+                        max_tokens: 1200,
+                        messages: [{ role: 'user', content: prompt }]
                     })
                 });
-                const json = await resp.json();
 
-                if (json.error) {
-                    body.innerHTML = `<p style="color:#ef4444;padding:1rem;background:#fff5f5;border-radius:1rem">${json.error}</p>`;
-                } else {
-                    // マークダウン風整形（**太字**、番号付きリスト）
-                    const escaped = (json.advice || '')
-                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const formatted = escaped
-                        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--dark)">$1</strong>')
-                        .replace(/^(①|②|③|④|⑤)/gm,
-                                 '<br><strong style="font-size:14px;color:var(--dark)">$1</strong>')
-                        .replace(/\n\n/g, '<br><br>')
-                        .replace(/\n/g, '<br>');
-                    body.innerHTML = `<div style="padding:4px 0">${formatted}</div>`;
+                if (resp.status === 401) {
+                    localStorage.removeItem('kiwi_anthropic_key');
+                    body.innerHTML = '<p style="color:#ef4444;padding:1rem;background:#fff5f5;border-radius:1rem;font-size:12px;font-weight:900">APIキーが無効です。再設定してください。</p>';
+                    _showApiKeySetup(body);
+                    return;
                 }
+                if (!resp.ok) {
+                    const e = await resp.json().catch(()=>({}));
+                    throw new Error(e.error?.message || 'APIエラー ' + resp.status);
+                }
+
+                const json = await resp.json();
+                const text = json.content?.[0]?.text || '';
+                const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                const formatted = escaped
+                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--dark)">$1</strong>')
+                    .replace(/^(①|②|③|④|⑤)/gm, '<br><strong style="font-size:14px;color:var(--dark)">$1</strong>')
+                    .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                body.innerHTML = `<div style="padding:4px 0">${formatted}</div>`;
+
             } catch (e) {
-                const isHttps = location.protocol === 'https:';
                 body.innerHTML =
                     '<div style="padding:1.2rem;background:#fff5f5;border-radius:1rem;border-left:4px solid #ef4444">' +
-                    '<p style="font-size:12px;font-weight:900;color:#ef4444;margin-bottom:10px">' +
-                    '<i class="fas fa-exclamation-circle" style="margin-right:6px"></i>サーバーに接続できません</p>' +
-                    (isHttps
-                      ? '<p style="font-size:11px;color:#64748b;line-height:1.9"><strong style="color:#0f172a">①</strong> ターミナルで起動確認：<br>' +
-                        '<code style="background:#f1f5f9;padding:3px 8px;border-radius:6px;font-size:10px;font-family:monospace">python3 ~/.salon_consultant/consult_server.py</code><br><br>' +
-                        '<strong style="color:#0f172a">②</strong> Chromeを使用してください（Safariは localhost への接続をブロックします）<br><br>' +
-                        '<strong style="color:#0f172a">③</strong> APIキーを確認：<br>' +
-                        '<code style="background:#f1f5f9;padding:3px 8px;border-radius:6px;font-size:10px;font-family:monospace">cat ~/.salon_consultant/api_key.txt</code></p>'
-                      : '<p style="font-size:11px;color:#64748b;line-height:1.8">ターミナルで以下を実行してからリトライしてください：</p>' +
-                        '<code style="display:block;margin-top:8px;background:#f1f5f9;padding:8px 12px;border-radius:8px;font-size:10px;font-family:monospace;color:var(--dark)">' +
-                        'python3 ~/.salon_consultant/consult_server.py</code>') +
-                    '</div>';
+                    '<p style="font-size:12px;font-weight:900;color:#ef4444;margin-bottom:8px">' +
+                    '<i class="fas fa-exclamation-circle" style="margin-right:6px"></i>エラーが発生しました</p>' +
+                    `<p style="font-size:11px;color:#64748b">${e.message}</p></div>`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-robot"></i> 再生成';
