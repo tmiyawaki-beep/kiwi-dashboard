@@ -928,9 +928,9 @@
                                     <p style="font-size:11px; font-weight:900; letter-spacing:0.3em; text-transform:uppercase">All KPI Secured</p>
                                 </div>
                             `}
-                            \${hasAnyAlert ? `
+                            ${hasAnyAlert ? `
                                 <div style="margin-top:16px; padding-top:14px; border-top:1.5px dashed #e2e8f0; text-align:center">
-                                    <button onclick="openConsultModal('\${s.name}')" class="ai-consult-btn">
+                                    <button onclick="openConsultModal('${s.name}')" class="ai-consult-btn">
                                         <i class="fas fa-robot" style="margin-right:7px"></i>AIコンサルタントに相談
                                     </button>
                                 </div>
@@ -1265,11 +1265,8 @@
                         .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--dark)">$1</strong>')
                         .replace(/^(①|②|③|④|⑤)/gm,
                                  '<br><strong style="font-size:14px;color:var(--dark)">$1</strong>')
-                        .replace(/
-
-/g, '<br><br>')
-                        .replace(/
-/g, '<br>');
+                        .replace(/\n\n/g, '<br><br>')
+                        .replace(/\n/g, '<br>');
                     body.innerHTML = `<div style="padding:4px 0">${formatted}</div>`;
                 }
             } catch (e) {
