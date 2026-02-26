@@ -1311,6 +1311,7 @@
 
         // ===== AIコンサルタント チャット（GASプロキシ・会話ログ自動保存）=====
         let _consultStoreName = null;
+        let _storeCtx    = '';   // KPIデータ（URLを圧迫しないよう分離）
         let _chatHistory = [];   // { role: 'user'|'assistant', content: string }[]
         let _typingEl    = null;
         const _ALERT_LBL = {
@@ -1360,17 +1361,21 @@
             if (chatInput) chatInput.disabled = true;
             _showTyping();
             try {
-                const msgs = _chatHistory.slice(-12);
+                // 直近8件のみ送信 + AI返答は350文字に短縮して保存（URL長さ対策）
+                const msgs = _chatHistory.slice(-8);
                 const url  = gasUrl
                     + '?action=consult'
                     + '&store='    + encodeURIComponent(_consultStoreName || '')
+                    + '&ctx='      + encodeURIComponent(_storeCtx || '')
                     + '&messages=' + encodeURIComponent(JSON.stringify(msgs));
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error('HTTPエラー ' + resp.status);
                 const json = await resp.json();
                 if (json.error) throw new Error(json.error);
                 const text = json.text || '';
-                _chatHistory.push({ role: 'assistant', content: text });
+                // UIにはフル表示、履歴には短縮版を保存（URL肥大化防止）
+                const short = text.length > 350 ? text.slice(0, 350) + '…' : text;
+                _chatHistory.push({ role: 'assistant', content: short });
                 _hideTyping();
                 _appendMsg('assistant', text, true);
             } catch(e) {
@@ -1410,12 +1415,14 @@
             document.getElementById('ai-modal-alerts').innerHTML =
                 '<p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px">アラート中の項目</p>' + badgesHtml;
 
-            // 最初のコンテキスト（UIには表示せず自動分析）
+            // KPIデータは ctx に分離（毎回URLに含めるが肥大化しない固定サイズ）
             const alertText = Object.entries(data.alerts).filter(([k,v])=>v)
-                .map(([k]) => _ALERT_LBL[k]||k).join('、') || 'なし';
-            const kpiText = Object.entries(data.kpis).map(([k,v]) => `${k}: ${v}`).join('\n') || 'データなし';
-            _chatHistory.push({ role: 'user', content:
-                `店舗: ${data.store}（${data.category}）\nアラート: ${alertText}\nKPI:\n${kpiText}\n\n今月の改善ポイントと、今すぐ実行できるアクションを3〜5点提案してください。` });
+                .map(([k]) => _ALERT_LBL[k]||k).join('・') || 'なし';
+            const kpiText = Object.entries(data.kpis).map(([k,v]) => `${k}:${v}`).join(' / ') || 'データなし';
+            _storeCtx = `店舗:${data.store}(${data.category}) アラート:${alertText} KPI:${kpiText}`;
+
+            // 最初のメッセージは短く（KPIはctxで渡すので不要）
+            _chatHistory.push({ role: 'user', content: '今月の改善ポイントと今すぐ実行できるアクションを3〜5点提案してください。' });
             await _callAI();
         }
 
