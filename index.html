@@ -739,7 +739,7 @@
                     unitPrice:    Number(s.unitPriceDiff) < 0,
                     servicePrice: Number(s.serviceUnitPrice) < 4800,
                     ticket:       Number(s.ticketSalesRate) <= 0.1 || Number(s.ticketUnitPrice) <= 15000,
-                    product:      Number(s.productSalesRate) <= 0.1 || Number(s.productUnitPrice) <= 5000
+                    product:      Number(s.productSalesRate) <= 0.1 || Number(s.productUnitPrice) > 5000
                 };
                 const hasAnyAlert = Object.values(alerts).some(v => v);
                 // AI相談用データ収集
@@ -1297,14 +1297,21 @@
                     body.innerHTML = `<div style="padding:4px 0">${formatted}</div>`;
                 }
             } catch (e) {
+                const isHttps = location.protocol === 'https:';
                 body.innerHTML =
                     '<div style="padding:1.2rem;background:#fff5f5;border-radius:1rem;border-left:4px solid #ef4444">' +
                     '<p style="font-size:12px;font-weight:900;color:#ef4444;margin-bottom:10px">' +
                     '<i class="fas fa-exclamation-circle" style="margin-right:6px"></i>サーバーに接続できません</p>' +
-                    '<p style="font-size:11px;color:#64748b;line-height:1.8">ターミナルで以下を実行してからリトライしてください：</p>' +
-                    '<code style="display:block;margin-top:8px;background:#f1f5f9;padding:8px 12px;border-radius:8px;font-size:10px;font-family:monospace;color:var(--dark)">' +
-                    'python3 ~/.salon_consultant/consult_server.py' +
-                    '</code></div>';
+                    (isHttps
+                      ? '<p style="font-size:11px;color:#64748b;line-height:1.9"><strong style="color:#0f172a">①</strong> ターミナルで起動確認：<br>' +
+                        '<code style="background:#f1f5f9;padding:3px 8px;border-radius:6px;font-size:10px;font-family:monospace">python3 ~/.salon_consultant/consult_server.py</code><br><br>' +
+                        '<strong style="color:#0f172a">②</strong> Chromeを使用してください（Safariは localhost への接続をブロックします）<br><br>' +
+                        '<strong style="color:#0f172a">③</strong> APIキーを確認：<br>' +
+                        '<code style="background:#f1f5f9;padding:3px 8px;border-radius:6px;font-size:10px;font-family:monospace">cat ~/.salon_consultant/api_key.txt</code></p>'
+                      : '<p style="font-size:11px;color:#64748b;line-height:1.8">ターミナルで以下を実行してからリトライしてください：</p>' +
+                        '<code style="display:block;margin-top:8px;background:#f1f5f9;padding:8px 12px;border-radius:8px;font-size:10px;font-family:monospace;color:var(--dark)">' +
+                        'python3 ~/.salon_consultant/consult_server.py</code>') +
+                    '</div>';
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-robot"></i> 再生成';
