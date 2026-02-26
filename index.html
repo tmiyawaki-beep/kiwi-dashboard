@@ -574,7 +574,10 @@
             document.getElementById('loader-subtext').innerText =
                 coreValues[Math.floor(Math.random() * coreValues.length)];
             try {
-                const res = await fetch(gasUrl);
+                const _ctrl = new AbortController();
+                const _tid  = setTimeout(() => _ctrl.abort(), 20000);
+                const res = await fetch(gasUrl, { signal: _ctrl.signal });
+                clearTimeout(_tid);
                 raw = await res.json();
 
                 document.getElementById('ym').innerText    = raw.dateInfo.yearMonth;
@@ -604,8 +607,28 @@
                 apply();
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader-subtext').innerText = "接続に失敗しました";
-                document.getElementById('sync-time').textContent = 'データ取得エラー';
+                const isTO = e.name === 'AbortError';
+                const el = document.getElementById('loader');
+                el.style.background = 'white';
+                el.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:40px;text-align:center;max-width:480px">
+                        <div style="font-size:52px">⚠️</div>
+                        <h2 style="font-size:20px;font-weight:900;color:#0f172a">
+                            ${isTO ? 'データ取得タイムアウト' : 'GAS接続エラー'}
+                        </h2>
+                        <p style="font-size:13px;color:#64748b;line-height:1.9">
+                            スプレッドシートからのデータ取得に失敗しました。<br>
+                            <strong style="color:#0f172a">GAS の再デプロイ</strong>が必要な可能性があります。<br><br>
+                            GAS エディタ → 右上「デプロイ」→「デプロイを管理」<br>
+                            → 鉛筆アイコン → アクセスを<br>
+                            <strong style="color:#0f172a">「全員（匿名ユーザーを含む）」</strong>に設定して<br>
+                            新しいバージョンでデプロイしてください。
+                        </p>
+                        <button onclick="location.reload()"
+                                style="padding:12px 30px;background:#0f172a;color:white;border:none;border-radius:999px;font-size:13px;font-weight:900;cursor:pointer">
+                            再試行
+                        </button>
+                    </div>`;
             }
         }
 
