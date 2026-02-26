@@ -595,7 +595,7 @@
                     document.getElementById('sv-buttons').appendChild(btn);
                 });
 
-                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('loader').style.display = 'none';
                 // 最終更新時刻
                 const _now = new Date();
                 document.getElementById('sync-time').textContent =
