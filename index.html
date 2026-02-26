@@ -1309,8 +1309,10 @@
             }
         }
 
-        // ===== AIコンサルタント機能（GASプロキシ経由・APIキー不要）=====
+        // ===== AIコンサルタント チャット（GASプロキシ・会話ログ自動保存）=====
         let _consultStoreName = null;
+        let _chatHistory = [];   // { role: 'user'|'assistant', content: string }[]
+        let _typingEl    = null;
         const _ALERT_LBL = {
             sales:'月間売上が目標未達', newGuest:'新規客数が目標未達',
             repeatGuest:'リピート客数が目標未達', nextRes:'次回予約率が低い（35%以下）',
@@ -1318,82 +1320,109 @@
             ticket:'回数券販売率が低い', product:'物販率が低い'
         };
 
-        function openConsultModal(storeName) {
+        function _appendMsg(role, text, animate) {
+            const area   = document.getElementById('ai-chat-area');
+            const isUser = role === 'user';
+            const wrap   = document.createElement('div');
+            wrap.style.cssText = `display:flex;justify-content:${isUser?'flex-end':'flex-start'};align-items:flex-start;gap:7px;opacity:${animate?0:1};transition:opacity 0.3s`;
+            if (!isUser) {
+                const ic = document.createElement('div');
+                ic.style.cssText = 'width:26px;height:26px;background:#0f172a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px';
+                ic.textContent = '🤖';
+                wrap.appendChild(ic);
+            }
+            const bub = document.createElement('div');
+            bub.style.cssText = `max-width:80%;padding:9px 13px;font-size:12px;font-weight:900;line-height:1.8;border-radius:${isUser?'14px 14px 3px 14px':'14px 14px 14px 3px'};background:${isUser?'#0f172a':'#f1f5f9'};color:${isUser?'white':'#0f172a'}`;
+            const esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            bub.innerHTML = esc.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+            wrap.appendChild(bub);
+            area.appendChild(wrap);
+            area.scrollTop = area.scrollHeight;
+            if (animate) requestAnimationFrame(() => { wrap.style.opacity = 1; });
+        }
+
+        function _showTyping() {
+            const area = document.getElementById('ai-chat-area');
+            _typingEl = document.createElement('div');
+            _typingEl.style.cssText = 'display:flex;align-items:center;gap:7px';
+            _typingEl.innerHTML =
+                '<div style="width:26px;height:26px;background:#0f172a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🤖</div>' +
+                '<div style="padding:9px 14px;background:#f1f5f9;border-radius:14px 14px 14px 3px;font-size:12px;color:#94a3b8;font-weight:900"><i class="fas fa-circle-notch fa-spin"></i>　考えています…</div>';
+            area.appendChild(_typingEl);
+            area.scrollTop = area.scrollHeight;
+        }
+        function _hideTyping() { if (_typingEl) { _typingEl.remove(); _typingEl = null; } }
+
+        async function _callAI() {
+            const sendBtn   = document.getElementById('chat-send-btn');
+            const chatInput = document.getElementById('chat-input');
+            if (sendBtn)   sendBtn.disabled   = true;
+            if (chatInput) chatInput.disabled = true;
+            _showTyping();
+            try {
+                const msgs = _chatHistory.slice(-12);
+                const url  = gasUrl
+                    + '?action=consult'
+                    + '&store='    + encodeURIComponent(_consultStoreName || '')
+                    + '&messages=' + encodeURIComponent(JSON.stringify(msgs));
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('HTTPエラー ' + resp.status);
+                const json = await resp.json();
+                if (json.error) throw new Error(json.error);
+                const text = json.text || '';
+                _chatHistory.push({ role: 'assistant', content: text });
+                _hideTyping();
+                _appendMsg('assistant', text, true);
+            } catch(e) {
+                _hideTyping();
+                _appendMsg('assistant', `⚠️ エラー: ${e.message}`, true);
+            } finally {
+                if (sendBtn)   sendBtn.disabled   = false;
+                if (chatInput) { chatInput.disabled = false; chatInput.focus(); }
+            }
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const text  = (input ? input.value.trim() : '');
+            if (!text) return;
+            input.value = '';
+            input.style.height = 'auto';
+            _chatHistory.push({ role: 'user', content: text });
+            _appendMsg('user', text, true);
+            await _callAI();
+        }
+
+        async function openConsultModal(storeName) {
             _consultStoreName = storeName;
+            _chatHistory      = [];
             const data = consultDataMap[storeName];
             if (!data) return;
-
             document.getElementById('ai-modal-overlay').style.display = 'flex';
             document.getElementById('ai-modal-store').textContent = storeName;
+            document.getElementById('ai-chat-area').innerHTML = '';
 
-            const badgesHtml = Object.entries(data.alerts)
-                .filter(([k, v]) => v)
+            const badgesHtml = Object.entries(data.alerts).filter(([k,v])=>v)
                 .map(([k]) =>
                     `<span style="display:inline-flex;align-items:center;gap:4px;margin:3px 4px 3px 0;padding:3px 10px;background:#fff0f0;border-radius:99px;color:#ef4444;font-size:9px;font-weight:900">` +
-                    `<span class="alert-dot" style="width:5px;height:5px;flex-shrink:0"></span>${_ALERT_LBL[k]||k}</span>`
+                    `<span style="width:5px;height:5px;background:#ef4444;border-radius:50%;flex-shrink:0;display:inline-block"></span>${_ALERT_LBL[k]||k}</span>`
                 ).join('');
-
             document.getElementById('ai-modal-alerts').innerHTML =
-                '<p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px">アラート中の項目</p>' +
-                badgesHtml;
+                '<p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px">アラート中の項目</p>' + badgesHtml;
 
-            // モーダルを開いたら自動で分析開始
-            runConsult();
+            // 最初のコンテキスト（UIには表示せず自動分析）
+            const alertText = Object.entries(data.alerts).filter(([k,v])=>v)
+                .map(([k]) => _ALERT_LBL[k]||k).join('、') || 'なし';
+            const kpiText = Object.entries(data.kpis).map(([k,v]) => `${k}: ${v}`).join('\n') || 'データなし';
+            _chatHistory.push({ role: 'user', content:
+                `店舗: ${data.store}（${data.category}）\nアラート: ${alertText}\nKPI:\n${kpiText}\n\n今月の改善ポイントと、今すぐ実行できるアクションを3〜5点提案してください。` });
+            await _callAI();
         }
 
         function closeConsultModal() {
             document.getElementById('ai-modal-overlay').style.display = 'none';
             _consultStoreName = null;
-        }
-
-        async function runConsult() {
-            if (!_consultStoreName) return;
-            const data = consultDataMap[_consultStoreName];
-            if (!data) return;
-
-            const btn  = document.getElementById('ai-run-btn');
-            const body = document.getElementById('ai-modal-body');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> 分析中...';
-            body.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;font-size:12px">' +
-                             '<i class="fas fa-circle-notch fa-spin"></i> AIが分析しています…</p>';
-
-            const alertText = Object.entries(data.alerts).filter(([k,v])=>v)
-                .map(([k]) => _ALERT_LBL[k]||k).join('、') || 'なし';
-            const kpiText = Object.entries(data.kpis)
-                .map(([k,v]) => k+':'+v).join(' / ') || 'データなし';
-            const prompt =
-`美容サロン（眉毛・まつ毛専門）経営コンサルタントとして回答してください。
-店舗:${data.store}(${data.category})
-アラート項目:${alertText}
-KPI:${kpiText}
-今週・今月中に実行できる具体的な改善アクションを3〜5点、**太字タイトル**+1〜2行の説明で、効果が高い順に日本語で提案してください。スタッフへ直接指示できる具体性で。`;
-
-            try {
-                const url = gasUrl + '?action=consult&prompt=' + encodeURIComponent(prompt);
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error('HTTPエラー ' + resp.status);
-                const json = await resp.json();
-                if (json.error) throw new Error(json.error);
-
-                const text = json.text || '';
-                const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                const formatted = escaped
-                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--dark)">$1</strong>')
-                    .replace(/^(①|②|③|④|⑤)/gm, '<br><strong style="font-size:14px;color:var(--dark)">$1</strong>')
-                    .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-                body.innerHTML = `<div style="padding:4px 0">${formatted}</div>`;
-
-            } catch (e) {
-                body.innerHTML =
-                    '<div style="padding:1.2rem;background:#fff5f5;border-radius:1rem;border-left:4px solid #ef4444">' +
-                    '<p style="font-size:12px;font-weight:900;color:#ef4444;margin-bottom:8px">' +
-                    '<i class="fas fa-exclamation-circle" style="margin-right:6px"></i>エラーが発生しました</p>' +
-                    `<p style="font-size:11px;color:#64748b">${e.message}</p></div>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-robot"></i> 再生成';
-            }
+            _chatHistory = [];
         }
 
         init();
@@ -1433,24 +1462,35 @@ KPI:${kpiText}
             <!-- アラート一覧 -->
             <div id="ai-modal-alerts"
                  style="background:#f8fafc; border-radius:1rem; padding:12px 14px; flex-shrink:0"></div>
-            <!-- アドバイス本文 -->
-            <div id="ai-modal-body"
-                 style="flex:1; overflow-y:auto; font-size:13px; line-height:1.9;
-                        color:var(--dark); padding-right:4px; min-height:120px"></div>
-            <!-- フッターボタン -->
-            <div style="display:flex; gap:10px; flex-shrink:0">
+            <!-- チャットエリア -->
+            <div id="ai-chat-area"
+                 style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;
+                        padding:2px 2px 2px 2px; min-height:160px"></div>
+            <!-- チャット入力 -->
+            <div style="display:flex; gap:8px; flex-shrink:0; align-items:flex-end;
+                        padding-top:10px; border-top:1.5px solid #f1f5f9">
                 <button onclick="closeConsultModal()"
-                        style="flex:1; padding:12px; border-radius:1rem; border:1.5px solid #e2e8f0;
-                               background:white; font-size:12px; font-weight:900; color:#64748b; cursor:pointer">
+                        style="padding:10px 13px; border-radius:1rem; border:1.5px solid #e2e8f0;
+                               background:white; font-size:11px; font-weight:900; color:#64748b;
+                               cursor:pointer; flex-shrink:0; white-space:nowrap">
                     閉じる
                 </button>
-                <button id="ai-run-btn" onclick="runConsult()"
-                        style="flex:2; padding:12px; border-radius:1rem; border:none;
-                               background:var(--dark); color:white; font-size:12px; font-weight:900;
-                               cursor:pointer; display:flex; align-items:center;
-                               justify-content:center; gap:8px; transition:all 0.2s">
-                    <i class="fas fa-robot"></i> 再生成
-                </button>
+                <div style="flex:1; position:relative">
+                    <textarea id="chat-input"
+                              placeholder="追加で質問できます（Enterで送信）"
+                              rows="1"
+                              oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+                              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"
+                              style="width:100%;padding:10px 44px 10px 14px;border-radius:1rem;
+                                     border:1.5px solid #e2e8f0;font-size:12px;font-weight:900;
+                                     resize:none;box-sizing:border-box;line-height:1.5;overflow:hidden;
+                                     font-family:'Noto Serif JP',serif;max-height:100px"></textarea>
+                    <button id="chat-send-btn" onclick="sendChat()"
+                            style="position:absolute;right:7px;bottom:7px;width:30px;height:30px;
+                                   border-radius:0.6rem;background:#0f172a;color:white;border:none;
+                                   cursor:pointer;font-size:14px;display:flex;align-items:center;
+                                   justify-content:center;line-height:1">↑</button>
+                </div>
             </div>
         </div>
     </div>
