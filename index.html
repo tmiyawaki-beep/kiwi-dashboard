@@ -388,7 +388,7 @@
             <span class="alert-dot" style="flex-shrink:0; margin-top:3px"></span>
             <div style="flex:1; margin-left:10px">
                 <p style="font-size:9px; font-weight:900; color:var(--red); text-transform:uppercase; letter-spacing:0.2em; margin-bottom:7px">
-                    要注意店舗 — 改善アクションが必要です
+                    売上未達店舗 — 着地見込 100% 未満
                 </p>
                 <div id="alert-banner-stores"></div>
             </div>
@@ -433,7 +433,7 @@
                     <p id="ov-next-res-val" class="text-[9px] font-bold text-slate-400 mt-1"></p>
                 </div>
                 <div class="bg-white rounded-[2rem] soft-shadow p-6" style="border-left:5px solid #d4a05a; border:1px solid #fde68a; border-left-width:5px">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">要注意店舗数</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">売上未達店舗数</p>
                     <p id="ov-alert-count" class="text-4xl font-black italic leading-none" style="color:#d4a05a">--</p>
                     <p id="ov-alert-val" class="text-[9px] font-bold text-slate-400 mt-1"></p>
                 </div>
@@ -959,18 +959,14 @@
             });
 
             // アラートバナー更新
+            // 要注意バナー = 売上着地見込が100%未満の店舗のみ
             const _alertStores = stores.filter(s => {
                 const isD = s.category_label === '直営';
                 const _aFc = ((isD ? s.kgiForecast : s.svForecast) > 0)
                     ? (isD ? s.kgiForecast : s.svForecast)
                     : (isD && s.kgiGoal > 0 ? (s.kgiActual||0)/s.kgiGoal
                     : (!isD && s.svGoal > 0 ? (s.svActual||0)/s.svGoal : 0));
-                const _nFca = (s.newGuestForecast > 0) ? s.newGuestForecast
-                    : (s.newGuestGoal > 0 ? (s.newGuestActual||0)/s.newGuestGoal : 0);
-                const _rFca = (s.repeatForecast > 0) ? s.repeatForecast
-                    : (s.repeatGoal > 0 ? (s.repeatActual||0)/s.repeatGoal : 0);
-                return _aFc < 1.0 || _nFca < 1.0 || _rFca < 1.0 ||
-                       Number(s.nextReservationRate) <= 0.35;
+                return _aFc < 1.0;  // 売上のみ
             });
             const _banner = document.getElementById('alert-banner');
             if (_alertStores.length > 0) {
@@ -1067,21 +1063,17 @@
             document.getElementById('ov-next-res-rate').style.color = _nrAvg >= 40 ? '#10b981' : _nrAvg >= 35 ? '#f59e0b' : '#ef4444';
             document.getElementById('ov-next-res-val').innerText = `平均 ${_nrAvg}% / 基準 35%`;
 
+            // 要注意店舗数 = 売上着地見込が100%未満の店舗のみ
             const _alertCount = _stList.filter(s => {
                 const isD = s.category_label === '直営';
                 const _aFcC = ((isD ? s.kgiForecast : s.svForecast) > 0)
                     ? (isD ? s.kgiForecast : s.svForecast)
                     : (isD && s.kgiGoal > 0 ? (s.kgiActual||0)/s.kgiGoal
                     : (!isD && s.svGoal > 0 ? (s.svActual||0)/s.svGoal : 0));
-                const _nFcC = (s.newGuestForecast > 0) ? s.newGuestForecast
-                    : (s.newGuestGoal > 0 ? (s.newGuestActual||0)/s.newGuestGoal : 0);
-                const _rFcC = (s.repeatForecast > 0) ? s.repeatForecast
-                    : (s.repeatGoal > 0 ? (s.repeatActual||0)/s.repeatGoal : 0);
-                return _aFcC < 1.0 || _nFcC < 1.0 || _rFcC < 1.0 ||
-                       Number(s.nextReservationRate) <= 0.35;
+                return _aFcC < 1.0;  // 売上のみ
             }).length;
             document.getElementById('ov-alert-count').innerText = _alertCount;
-            document.getElementById('ov-alert-val').innerText = `${_stList.length}店舗中 ${_alertCount}店舗が要注意`;
+            document.getElementById('ov-alert-val').innerText = `${_stList.length}店舗中 ${_alertCount}店舗が売上未達`;
 
             const names  = allStores.map(s => s.name);
             const saleFc = allStores.map(s => {
