@@ -439,26 +439,56 @@
                 </div>
             </div>
 
-            <!-- チャート行 1 -->
+            <!-- チャート行 1：売上着地見込（全幅・大型） -->
+            <div class="bg-white rounded-[2rem] card-shadow p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest" style="color:var(--dark)">
+                        <i class="fas fa-chart-bar mr-2"></i>店舗別 売上着地見込
+                    </p>
+                    <div class="flex gap-3 text-[9px] font-black">
+                        <span style="color:#10b981">■ 100%以上</span>
+                        <span style="color:#f59e0b">■ 90〜99%</span>
+                        <span style="color:#ef4444">■ 89%以下</span>
+                        <span style="color:rgba(15,23,42,0.5)">┆ 目標100%</span>
+                    </div>
+                </div>
+                <div style="height:520px;position:relative"><canvas id="chart-sales"></canvas></div>
+            </div>
+
+            <!-- チャート行 2：客数 ＋ 回数券販売率 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white rounded-[2rem] card-shadow p-6">
-                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)"><i class="fas fa-chart-bar mr-2"></i>店舗別 売上着地見込</p>
-                    <div style="height:320px;position:relative"><canvas id="chart-sales"></canvas></div>
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)">
+                        <i class="fas fa-users mr-2"></i>店舗別 客数（新規 / 再来）
+                    </p>
+                    <div style="height:320px;position:relative"><canvas id="chart-guests"></canvas></div>
                 </div>
                 <div class="bg-white rounded-[2rem] card-shadow p-6">
-                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)"><i class="fas fa-users mr-2"></i>店舗別 客数（新規 / 再来）</p>
-                    <div style="height:320px;position:relative"><canvas id="chart-guests"></canvas></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[10px] font-black uppercase tracking-widest" style="color:var(--dark)">
+                            <i class="fas fa-ticket-alt mr-2"></i>店舗別 回数券販売率
+                        </p>
+                        <span class="text-[9px] font-black" style="color:rgba(15,23,42,0.5)">┆ 基準 10%</span>
+                    </div>
+                    <div style="height:320px;position:relative"><canvas id="chart-ticket"></canvas></div>
                 </div>
             </div>
 
-            <!-- チャート行 2 -->
+            <!-- チャート行 3：単価比較 ＋ 次回予約率 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white rounded-[2rem] card-shadow p-6">
-                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)"><i class="fas fa-yen-sign mr-2"></i>店舗別 単価比較（客単価 / 施術単価）</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)">
+                        <i class="fas fa-yen-sign mr-2"></i>店舗別 単価比較（客単価 / 施術単価）
+                    </p>
                     <div style="height:320px;position:relative"><canvas id="chart-unit-price"></canvas></div>
                 </div>
                 <div class="bg-white rounded-[2rem] card-shadow p-6">
-                    <p class="text-[10px] font-black uppercase tracking-widest mb-4" style="color:var(--dark)"><i class="fas fa-calendar-check mr-2"></i>店舗別 次回予約率</p>
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[10px] font-black uppercase tracking-widest" style="color:var(--dark)">
+                            <i class="fas fa-calendar-check mr-2"></i>店舗別 次回予約率
+                        </p>
+                        <span class="text-[9px] font-black" style="color:rgba(15,23,42,0.5)">┆ 基準 35%</span>
+                    </div>
                     <div style="height:320px;position:relative"><canvas id="chart-next-res"></canvas></div>
                 </div>
             </div>
@@ -1085,104 +1115,175 @@
                 return Math.round((_f || 0) * 100);
             });
             const newG   = allStores.map(s => Number(s.newGuestActual)   || 0);
-            const repG   = allStores.map(s => Number(s.repeatActual)     || 0);
-            const uPrice = allStores.map(s => Number(s.unitPriceActual)  || 0);
-            const sPrice = allStores.map(s => Number(s.serviceUnitPrice) || 0);
-            const nxRes  = allStores.map(s => Math.round((Number(s.nextReservationRate) || 0) * 100));
+            const repG       = allStores.map(s => Number(s.repeatActual)     || 0);
+            const uPrice     = allStores.map(s => Number(s.unitPriceActual)  || 0);
+            const sPrice     = allStores.map(s => Number(s.serviceUnitPrice) || 0);
+            const nxRes      = allStores.map(s => Math.round((Number(s.nextReservationRate) || 0) * 100));
+            const ticketRates = allStores.map(s => Math.round((Number(s.ticketSalesRate) || 0) * 100));
 
+            const fontSm  = { family: "'Noto Serif JP', serif", weight: '900', size: 9 };
             const fontCfg = { family: "'Noto Serif JP', serif", weight: '900', size: 10 };
             const gLine   = { color: 'rgba(0,0,0,0.05)' };
+            // 基準線用ライン共通設定
+            const refLine = (val, label) => ({
+                label, data: names.map(() => val), type: 'line',
+                borderColor: 'rgba(15,23,42,0.35)', borderWidth: 1.5,
+                borderDash: [5,4], pointRadius: 0, fill: false, order: 0
+            });
 
-            // Chart 1: 売上着地見込（横棒）
+            // ===== Chart 1: 売上着地見込（横棒・全幅・大型）=====
             overviewCharts.sales = new Chart(
                 document.getElementById('chart-sales').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: names,
                     datasets: [{
-                        label: '着地見込%',
+                        label: '着地見込',
                         data: saleFc,
-                        backgroundColor: saleFc.map(v => v >= 100 ? 'rgba(34,197,94,0.85)' : v >= 90 ? 'rgba(251,191,36,0.85)' : 'rgba(255,59,48,0.85)'),
-                        borderRadius: 6,
+                        backgroundColor: saleFc.map(v =>
+                            v >= 100 ? 'rgba(34,197,94,0.82)' :
+                            v >= 90  ? 'rgba(251,191,36,0.82)' : 'rgba(255,59,48,0.82)'),
+                        borderRadius: 5,
+                        barPercentage: 0.75,
+                        order: 1
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, indexAxis: 'y',
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => ctx.parsed.x + '%' } }
+                        tooltip: { callbacks: {
+                            label: ctx => ' ' + ctx.parsed.x + '%',
+                            title: ctx => ctx[0].label
+                        }}
                     },
                     scales: {
-                        x: { max: 130, grid: gLine, ticks: { font: fontCfg, callback: v => v + '%' } },
-                        y: { grid: { display: false }, ticks: { font: fontCfg } }
+                        x: {
+                            min: 0, max: 135,
+                            grid: {
+                                color: ctx => ctx.tick.value === 100
+                                    ? 'rgba(15,23,42,0.45)' : 'rgba(0,0,0,0.04)',
+                                lineWidth: ctx => ctx.tick.value === 100 ? 2 : 1
+                            },
+                            ticks: { font: fontSm, callback: v => v + '%', stepSize: 20 }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: fontSm, padding: 4 }
+                        }
                     }
                 }
             });
 
-            // Chart 2: 客数（積み上げ棒）
+            // ===== Chart 2: 客数（積み上げ棒）=====
             overviewCharts.guests = new Chart(
                 document.getElementById('chart-guests').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: names,
                     datasets: [
-                        { label: '新規', data: newG, backgroundColor: 'rgba(200,80,62,0.85)', borderRadius: 4, stack: 'g' },
-                        { label: '再来', data: repG,  backgroundColor: 'rgba(29,95,212,0.85)',  borderRadius: 4, stack: 'g' }
+                        { label: '新規', data: newG, backgroundColor: 'rgba(200,80,62,0.82)', borderRadius: 3, stack: 'g', barPercentage: 0.8 },
+                        { label: '再来', data: repG,  backgroundColor: 'rgba(29,95,212,0.82)', borderRadius: 3, stack: 'g', barPercentage: 0.8 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top', labels: { font: fontCfg, boxWidth: 12 } } },
+                    plugins: { legend: { display: true, position: 'top', labels: { font: fontSm, boxWidth: 10 } } },
                     scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { font: fontCfg } },
-                        y: { stacked: true, grid: gLine, ticks: { font: fontCfg } }
+                        x: { stacked: true, grid: { display: false },
+                             ticks: { font: { family:"'Noto Serif JP',serif", weight:'900', size:8 },
+                                      maxRotation: 90, minRotation: 45 } },
+                        y: { stacked: true, grid: gLine, ticks: { font: fontSm } }
                     }
                 }
             });
 
-            // Chart 3: 単価比較（グループ棒）
+            // ===== Chart 3: 回数券販売率（新設）=====
+            overviewCharts.ticket = new Chart(
+                document.getElementById('chart-ticket').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: names,
+                    datasets: [
+                        {
+                            label: '回数券販売率',
+                            data: ticketRates,
+                            backgroundColor: ticketRates.map(v =>
+                                v >= 10 ? 'rgba(34,197,94,0.82)' : 'rgba(255,59,48,0.82)'),
+                            borderRadius: 4, barPercentage: 0.75, order: 1
+                        },
+                        refLine(10, '基準10%')
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label === '基準10%' ? '基準: 10%' : ' ' + ctx.parsed.y + '%' } }
+                    },
+                    scales: {
+                        x: { grid: { display: false },
+                             ticks: { font: { family:"'Noto Serif JP',serif", weight:'900', size:8 },
+                                      maxRotation: 90, minRotation: 45 } },
+                        y: { grid: gLine, ticks: { font: fontSm, callback: v => v + '%' },
+                             suggestedMax: 25 }
+                    }
+                }
+            });
+
+            // ===== Chart 4: 単価比較（グループ棒）=====
             overviewCharts.unitPrice = new Chart(
                 document.getElementById('chart-unit-price').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: names,
                     datasets: [
-                        { label: '客単価',   data: uPrice, backgroundColor: 'rgba(29,95,212,0.75)',  borderRadius: 4 },
-                        { label: '施術単価', data: sPrice, backgroundColor: 'rgba(109,40,217,0.55)', borderRadius: 4 }
+                        { label: '客単価',   data: uPrice, backgroundColor: 'rgba(29,95,212,0.75)',  borderRadius: 3, barPercentage: 0.8 },
+                        { label: '施術単価', data: sPrice, backgroundColor: 'rgba(109,40,217,0.55)', borderRadius: 3, barPercentage: 0.8 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top', labels: { font: fontCfg, boxWidth: 12 } } },
+                    plugins: { legend: { display: true, position: 'top', labels: { font: fontSm, boxWidth: 10 } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { font: fontCfg } },
-                        y: { grid: gLine, ticks: { font: fontCfg, callback: v => '¥' + v.toLocaleString() } }
+                        x: { grid: { display: false },
+                             ticks: { font: { family:"'Noto Serif JP',serif", weight:'900', size:8 },
+                                      maxRotation: 90, minRotation: 45 } },
+                        y: { grid: gLine, ticks: { font: fontSm, callback: v => '¥' + v.toLocaleString() } }
                     }
                 }
             });
 
-            // Chart 4: 次回予約率
+            // ===== Chart 5: 次回予約率（基準線35%付き）=====
             overviewCharts.nextRes = new Chart(
                 document.getElementById('chart-next-res').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: names,
-                    datasets: [{
-                        label: '次回予約率',
-                        data: nxRes,
-                        backgroundColor: nxRes.map(v => v >= 35 ? 'rgba(109,40,217,0.75)' : 'rgba(255,59,48,0.75)'),
-                        borderRadius: 6,
-                    }]
+                    datasets: [
+                        {
+                            label: '次回予約率',
+                            data: nxRes,
+                            backgroundColor: nxRes.map(v =>
+                                v >= 40 ? 'rgba(109,40,217,0.82)' :
+                                v >= 35 ? 'rgba(34,197,94,0.82)'  : 'rgba(255,59,48,0.82)'),
+                            borderRadius: 4, barPercentage: 0.75, order: 1
+                        },
+                        refLine(35, '基準35%')
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => ctx.parsed.y + '%' } }
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label === '基準35%' ? '基準: 35%' : ' ' + ctx.parsed.y + '%' } }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { font: fontCfg } },
-                        y: { grid: gLine, ticks: { font: fontCfg, callback: v => v + '%' } }
+                        x: { grid: { display: false },
+                             ticks: { font: { family:"'Noto Serif JP',serif", weight:'900', size:8 },
+                                      maxRotation: 90, minRotation: 45 } },
+                        y: { grid: gLine, ticks: { font: fontSm, callback: v => v + '%' },
+                             suggestedMax: 110 }
                     }
                 }
             });
