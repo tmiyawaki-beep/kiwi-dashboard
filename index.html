@@ -12,6 +12,7 @@
 
         /* ===== hidden (Tailwind CDNフォールバック) ===== */
         .hidden { display: none !important; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         /* ===== CSS変数 ===== */
         :root {
@@ -324,12 +325,13 @@
 <body class="pb-24">
 
     <!-- ローディング画面 -->
-    <div id="loader" class="loading-overlay">
-        <img id="loader-logo" src="" alt="" style="width:180px; height:auto; margin-bottom:8px;">
-        <div class="animate-spin text-6xl" style="color: var(--dark)">
-            <i class="fas fa-circle-notch"></i>
+    <div id="loader" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:9000;flex-direction:column;justify-content:center;align-items:center;gap:20px;">
+        <img id="loader-logo" src="" alt="" style="width:180px;height:auto;margin-bottom:8px;">
+        <div style="font-size:52px;color:#0f172a;animation:spin 1s linear infinite;">
+            <i class="fas fa-circle-notch" style="color:#0f172a;"></i>
         </div>
-        <p id="loader-subtext" class="font-black text-xl px-8 text-center leading-relaxed" style="color: var(--dark)"></p>
+        <p id="loader-status" style="font-size:13px;color:#64748b;font-weight:700;">データを読み込み中...</p>
+        <p id="loader-subtext" style="font-size:11px;color:#94a3b8;padding:0 2rem;text-align:center;"></p>
     </div>
 
     <div class="max-w-7xl mx-auto p-4 md:p-8">
@@ -574,14 +576,18 @@
         ];
 
         async function init() {
-            document.getElementById('loader-subtext').innerText =
-                coreValues[Math.floor(Math.random() * coreValues.length)];
+            const loaderStatus = document.getElementById('loader-status');
+            const loaderSub = document.getElementById('loader-subtext');
+            if (loaderSub) loaderSub.innerText = coreValues[Math.floor(Math.random() * coreValues.length)];
             try {
+                if (loaderStatus) loaderStatus.innerText = 'スプレッドシートに接続中...';
                 const _ctrl = new AbortController();
-                const _tid  = setTimeout(() => _ctrl.abort(), 20000);
+                const _tid  = setTimeout(() => _ctrl.abort(), 25000);
                 const res = await fetch(gasUrl, { signal: _ctrl.signal });
                 clearTimeout(_tid);
+                if (loaderStatus) loaderStatus.innerText = 'データを解析中...';
                 raw = await res.json();
+                if (loaderStatus) loaderStatus.innerText = '画面を構築中...';
 
                 document.getElementById('ym').innerText    = raw.dateInfo.yearMonth;
                 document.getElementById('today').innerText = raw.dateInfo.today;
@@ -598,7 +604,8 @@
                     document.getElementById('sv-buttons').appendChild(btn);
                 });
 
-                document.getElementById('loader').style.display = 'none';
+                const loaderEl = document.getElementById('loader');
+                if (loaderEl) loaderEl.style.display = 'none';
                 // 最終更新時刻
                 const _now = new Date();
                 document.getElementById('sync-time').textContent =
@@ -612,6 +619,7 @@
                 console.error(e);
                 const isTO = e.name === 'AbortError';
                 const el = document.getElementById('loader');
+                if (!el) return;
                 el.style.background = 'white';
                 el.innerHTML = `
                     <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:40px;text-align:center;max-width:480px">
