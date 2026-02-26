@@ -387,9 +387,15 @@
         <div id="alert-banner" class="flex">
             <span class="alert-dot" style="flex-shrink:0; margin-top:3px"></span>
             <div style="flex:1; margin-left:10px">
-                <p style="font-size:9px; font-weight:900; color:var(--red); text-transform:uppercase; letter-spacing:0.2em; margin-bottom:7px">
-                    売上未達店舗 — 着地見込 100% 未満
-                </p>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px">
+                    <p style="font-size:9px; font-weight:900; color:var(--red); text-transform:uppercase; letter-spacing:0.2em">
+                        売上未達店舗 — 着地見込 100% 未満
+                    </p>
+                    <button id="alert-toggle-btn" onclick="toggleAlertBanner()"
+                            style="font-size:9px; font-weight:900; color:var(--red); background:none; border:none; cursor:pointer; padding:2px 6px; opacity:0.7">
+                        ▲ 閉じる
+                    </button>
+                </div>
                 <div id="alert-banner-stores"></div>
             </div>
         </div>
@@ -820,7 +826,7 @@
                                 着地見込
                                 <span class="ttp">
                                     <span class="ttp-ic" style="background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.5)">?</span>
-                                    <span class="ttp-bx">今月末の売上を現ペースで計算した予測値<br>（実績 ÷ 経過日数 × 月間営業日数 ÷ 目標）</span>
+                                    <span class="ttp-bx">月の最終日を100%として、今の売上が目標に対して何%に着地するかの予測。今日の日割り進捗（白線）を上回っていれば順調。</span>
                                 </span>
                             </p>
                             <p class="text-4xl font-black italic leading-none" style="color: ${forecastColor}">${forecast}%</p>
@@ -858,7 +864,7 @@
                                                     ${alerts.sales ? '<span class="alert-dot"></span>' : ''}
                                                 </p>
                                                 <p style="font-size:22px; font-weight:900; font-style:italic; color:white; line-height:1">¥${Math.round(salesActual).toLocaleString()}</p>
-                                                ${!isD ? `<p style="font-size:9px; color:#64748b; font-weight:900; margin-top:6px; font-style:italic">店舗売上: ¥${Math.round(s.kgiActual).toLocaleString()}</p>` : ''}
+                                                ${!isD ? `<p style="font-size:14px; color:rgba(255,255,255,0.75); font-weight:900; margin-top:8px">店舗売上 <span style="font-style:italic">¥${Math.round(s.kgiActual).toLocaleString()}</span></p>` : ''}
                                             </div>
                                             <div style="text-align:right">
                                                 <p style="font-size:8px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px">目標達成率</p>
@@ -888,7 +894,7 @@
 
                                 <!-- KPI: 客数 -->
                                 <div>
-                                    <span class="chip chip-guest"><i class="fas fa-users" style="margin-right:4px"></i>KPI 客数</span>
+                                    <span class="chip chip-guest"><i class="fas fa-users" style="margin-right:4px"></i>KPI 客数<span class="ttp" style="margin-left:5px"><span class="ttp-ic" style="font-size:7px;padding:1px 4px">?</span><span class="ttp-bx">新規: 今月の初来店客数 / 再来: 2回目以降の来店数</span></span></span>
                                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
                                         <div class="kpi-block guest ${alerts.newGuest ? 'alerting' : ''}">
                                             <p class="kpi-blabel guest"><i class="fas fa-user-plus" style="margin-right:3px"></i>新規 ${alerts.newGuest ? '<span class="alert-dot"></span>' : ''}</p>
@@ -911,18 +917,18 @@
 
                                 <!-- KPI: アップセル（物販単価・施術単価・客単価）-->
                                 <div>
-                                    <span class="chip chip-eff"><i class="fas fa-arrow-up" style="margin-right:4px"></i>KPI アップセル</span>
+                                    <span class="chip chip-eff"><i class="fas fa-arrow-up" style="margin-right:4px"></i>KPI アップセル<span class="ttp" style="margin-left:5px"><span class="ttp-ic" style="font-size:7px;padding:1px 4px">?</span><span class="ttp-bx">各単価 = 各売上 ÷ 販売数（または来客数）</span></span></span>
                                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
                                         <div class="kpi-block eff ${alerts.product ? 'alerting' : ''}">
-                                            <p class="kpi-blabel eff"><i class="fas fa-shopping-bag" style="margin-right:3px"></i>物販単価 ${alerts.product ? '<span class="alert-dot"></span>' : ''}</p>
+                                            <p class="kpi-blabel eff"><i class="fas fa-shopping-bag" style="margin-right:3px"></i>物販単価 ${alerts.product ? '<span class="alert-dot"></span>' : ''}<span class="ttp" style="margin-left:3px"><span class="ttp-ic" style="font-size:6px;padding:1px 3px">?</span><span class="ttp-bx">物販売上 ÷ 購入数</span></span></p>
                                             <p class="kpi-bval eff">¥${Math.round(s.productUnitPrice || 0).toLocaleString()}</p>
                                         </div>
                                         <div class="kpi-block eff ${alerts.servicePrice ? 'alerting' : ''}">
-                                            <p class="kpi-blabel eff"><i class="fas fa-cut" style="margin-right:3px"></i>施術単価 ${alerts.servicePrice ? '<span class="alert-dot"></span>' : ''}</p>
+                                            <p class="kpi-blabel eff"><i class="fas fa-cut" style="margin-right:3px"></i>施術単価 ${alerts.servicePrice ? '<span class="alert-dot"></span>' : ''}<span class="ttp" style="margin-left:3px"><span class="ttp-ic" style="font-size:6px;padding:1px 3px">?</span><span class="ttp-bx">施術売上 ÷ 施術数</span></span></p>
                                             <p class="kpi-bval eff">¥${Math.round(s.serviceUnitPrice || 0).toLocaleString()}</p>
                                         </div>
                                         <div class="kpi-block eff ${alerts.unitPrice ? 'alerting' : ''}">
-                                            <p class="kpi-blabel eff"><i class="fas fa-yen-sign" style="margin-right:3px"></i>客単価 ${alerts.unitPrice ? '<span class="alert-dot"></span>' : ''}</p>
+                                            <p class="kpi-blabel eff"><i class="fas fa-yen-sign" style="margin-right:3px"></i>客単価 ${alerts.unitPrice ? '<span class="alert-dot"></span>' : ''}<span class="ttp" style="margin-left:3px"><span class="ttp-ic" style="font-size:6px;padding:1px 3px">?</span><span class="ttp-bx">売上合計 ÷ 来客数</span></span></p>
                                             <p class="kpi-bval eff">¥${Math.round(s.unitPriceActual || 0).toLocaleString()}</p>
                                         </div>
                                     </div>
@@ -930,14 +936,14 @@
 
                                 <!-- KPI: LTV（次回予約・回数券）-->
                                 <div>
-                                    <span class="chip chip-add"><i class="fas fa-heart" style="margin-right:4px"></i>KPI LTV</span>
+                                    <span class="chip chip-add"><i class="fas fa-heart" style="margin-right:4px"></i>KPI LTV<span class="ttp" style="margin-left:5px"><span class="ttp-ic" style="font-size:7px;padding:1px 4px">?</span><span class="ttp-bx">顧客の継続来店に関わる指標。次回予約・回数券で再来率を高める。</span></span></span>
                                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
                                         <div class="kpi-block add ${alerts.nextRes ? 'alerting' : ''}">
-                                            <p class="kpi-blabel add"><i class="fas fa-calendar-check" style="margin-right:3px"></i>次回予約率 ${alerts.nextRes ? '<span class="alert-dot"></span>' : ''}</p>
+                                            <p class="kpi-blabel add"><i class="fas fa-calendar-check" style="margin-right:3px"></i>次回予約率 ${alerts.nextRes ? '<span class="alert-dot"></span>' : ''}<span class="ttp" style="margin-left:3px"><span class="ttp-ic" style="font-size:6px;padding:1px 3px">?</span><span class="ttp-bx">次回予約獲得数 ÷ 総来客数 × 100%</span></span></p>
                                             <p class="kpi-bval add">${Math.round((s.nextReservationRate || 0) * 100)}<span class="kpi-bunit">%</span></p>
                                         </div>
                                         <div class="kpi-block add ${alerts.ticket ? 'alerting' : ''}">
-                                            <p class="kpi-blabel add"><i class="fas fa-ticket-alt" style="margin-right:3px"></i>回数券 ${alerts.ticket ? '<span class="alert-dot"></span>' : ''}</p>
+                                            <p class="kpi-blabel add"><i class="fas fa-ticket-alt" style="margin-right:3px"></i>回数券販売率 ${alerts.ticket ? '<span class="alert-dot"></span>' : ''}<span class="ttp" style="margin-left:3px"><span class="ttp-ic" style="font-size:6px;padding:1px 3px">?</span><span class="ttp-bx">回数券購入数 ÷ 総来客数 × 100% / 単価 = 回数券売上 ÷ 販売数</span></span></p>
                                             <p class="kpi-bval add">${Math.round((s.ticketSalesRate || 0) * 100)}<span class="kpi-bunit">%</span></p>
                                             <p class="kpi-bsub">¥${Math.round(s.ticketUnitPrice || 0).toLocaleString()}</p>
                                         </div>
@@ -951,8 +957,25 @@
                 // ===== ベストプラクティスビュー =====
                 } else {
                     const actions = getActionsForStore(alerts);
+                    const nextResVal  = Math.round((s.nextReservationRate || 0) * 100);
+                    const ticketVal   = Math.round((s.ticketSalesRate || 0) * 100);
+                    const nextResCol  = nextResVal <= 35 ? '#ef4444' : '#10b981';
+                    const ticketCol   = ticketVal  <= 10 ? '#ef4444' : '#10b981';
                     html += `
                         <div class="custom-scroll" style="flex:1; overflow-y:auto; padding-right:4px">
+                            <!-- 次回予約率・回数券のミニサマリー -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                                <div style="background:#f8fafc;border-radius:1rem;padding:10px 12px;text-align:center;border:1.5px solid ${alerts.nextRes ? '#fecaca' : '#e2e8f0'}">
+                                    <p style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">次回予約率</p>
+                                    <p style="font-size:20px;font-weight:900;font-style:italic;color:${nextResCol};line-height:1">${nextResVal}<span style="font-size:11px">%</span></p>
+                                    <p style="font-size:8px;color:#94a3b8;margin-top:3px;font-weight:900">基準 35%</p>
+                                </div>
+                                <div style="background:#f8fafc;border-radius:1rem;padding:10px 12px;text-align:center;border:1.5px solid ${alerts.ticket ? '#fecaca' : '#e2e8f0'}">
+                                    <p style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">回数券販売率</p>
+                                    <p style="font-size:20px;font-weight:900;font-style:italic;color:${ticketCol};line-height:1">${ticketVal}<span style="font-size:11px">%</span></p>
+                                    <p style="font-size:8px;color:#94a3b8;margin-top:3px;font-weight:900">¥${Math.round(s.ticketUnitPrice || 0).toLocaleString()}</p>
+                                </div>
+                            </div>
                             ${hasAnyAlert ? `
                                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; padding:10px 14px; background:#fff5f5; border-radius:0.9rem;">
                                     <span class="alert-dot"></span>
@@ -1307,6 +1330,14 @@
                 alert('先月・3ヶ月表示はGAS連携対応後に利用可能になります。');
                 document.getElementById('period-today').classList.add('active');
             }
+        }
+
+        // ===== アラートバナー 折りたたみ =====
+        let _alertBannerOpen = true;
+        function toggleAlertBanner() {
+            _alertBannerOpen = !_alertBannerOpen;
+            document.getElementById('alert-banner-stores').style.display = _alertBannerOpen ? '' : 'none';
+            document.getElementById('alert-toggle-btn').textContent = _alertBannerOpen ? '▲ 閉じる' : '▼ 開く';
         }
 
         // ===== AIコンサルタント チャット（GASプロキシ・会話ログ自動保存）=====
