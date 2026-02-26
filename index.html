@@ -553,6 +553,19 @@
             </div>
         </div>
 
+        <!-- ===== 次回予約率・回数券販売率 区分別サマリー ===== -->
+        <div class="bg-white rounded-[2rem] soft-shadow p-5 mb-8" style="border:1px solid #e8eaf0">
+            <p class="text-[9px] font-black uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--dark)">
+                <i class="fas fa-chart-pie"></i>次回予約率 / 回数券販売率 — 区分別平均
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px;padding:0 6px">
+                <span style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em">区分</span>
+                <span style="font-size:8px;font-weight:900;color:var(--add-col);text-align:center;text-transform:uppercase;letter-spacing:.05em">次回予約率</span>
+                <span style="font-size:8px;font-weight:900;color:#d97706;text-align:center;text-transform:uppercase;letter-spacing:.05em">回数券販売率</span>
+            </div>
+            <div id="sum-rate-breakdown"></div>
+        </div>
+
         <!-- ===== フィルタ ===== -->
         <div class="bg-white rounded-[2rem] soft-shadow p-5 mb-8 flex flex-wrap gap-4 items-center"
              style="border: 1px solid #e8eaf0">
@@ -732,6 +745,34 @@
             document.getElementById('sum-rep-val').innerText =
                 `実績 ${Math.round(sRow.repeatActual || 0)}人 / 目標 ${Math.round(sRow.repeatGoal || 0)}人`;
 
+            // ===== 区分別 次回予約率・回数券販売率 =====
+            const _allSt = raw.stores.slice(9).filter(s => s.name && s.name.length > 2);
+            const _avgR = (lst, fld) => {
+                const v = lst.map(s => Number(s[fld])||0).filter(v => v > 0);
+                return v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100) : null;
+            };
+            const _rCol = (v, base) => v===null ? '#94a3b8' : v>=base ? '#10b981' : v>=base*0.9 ? '#f59e0b' : '#ef4444';
+            const _svNames2 = [...new Set(_allSt.map(s=>(s.svName||'').trim()).filter(n=>n))];
+            const _groups = [
+                {label:'直営',       list:_allSt.filter(s=>s.category_label==='直営'), sep:false},
+                {label:'加盟',       list:_allSt.filter(s=>s.category_label!=='直営'), sep:false},
+                {label:'most eyes',  list:_allSt.filter(s=>s.name.startsWith('m')), sep:true},
+                {label:'SSIN STUDIO',list:_allSt.filter(s=>s.name.startsWith('S')), sep:false},
+                {label:'LUMISS',     list:_allSt.filter(s=>s.name.startsWith('L')), sep:false},
+                ..._svNames2.map((sv,i)=>({label:sv, list:_allSt.filter(s=>(s.svName||'').trim()===sv), sep:i===0}))
+            ];
+            const _rdHtml = _groups.map((g, i) => {
+                const nr = _avgR(g.list, 'nextReservationRate');
+                const tk = _avgR(g.list, 'ticketSalesRate');
+                const sepStyle = g.sep ? 'border-top:1px solid #f1f5f9;padding-top:6px;margin-top:2px;' : '';
+                return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;align-items:center;${sepStyle}padding:4px 6px;border-radius:8px;background:${i%2===0?'#fafbfc':'transparent'}">
+                    <span style="font-size:9px;font-weight:900;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.label}</span>
+                    <span style="font-size:14px;font-weight:900;font-style:italic;color:${_rCol(nr,35)};text-align:center;line-height:1">${nr!==null?nr+'%':'–'}</span>
+                    <span style="font-size:14px;font-weight:900;font-style:italic;color:${_rCol(tk,10)};text-align:center;line-height:1">${tk!==null?tk+'%':'–'}</span>
+                </div>`;
+            }).join('');
+            document.getElementById('sum-rate-breakdown').innerHTML = _rdHtml;
+
             render(list);
         }
 
@@ -762,7 +803,7 @@
                     : (s.newGuestGoal > 0 ? (s.newGuestActual||0) / s.newGuestGoal : 0);
                 const rProgress = s.repeatForecast > 0 ? s.repeatForecast
                     : (s.repeatGoal > 0 ? (s.repeatActual||0) / s.repeatGoal : 0);
-                // 乖離 = 目標 - 月末着地見込数（目標 × 着地見込率）
+                // 差分 = 目標 - 月末着地見込数（目標 × 着地見込率）
                 const nGapValue = Math.round((s.newGuestGoal||0) * (1 - nProgress));
                 const rGapValue = Math.round((s.repeatGoal||0)   * (1 - rProgress));
 
@@ -882,7 +923,6 @@
                                                         <span class="ttp-bx">実績 ÷ 月間目標 × 100%<br>白線 = 今日時点の日割り目標（月の${dayPct}%通過）</span>
                                                     </span>
                                                 </span>
-                                                <span style="font-size:7px;font-weight:900;color:rgba(255,255,255,0.4)">日割り基準 ${dayPct}%</span>
                                             </div>
                                             <div class="dpb-bg">
                                                 <div class="dpb-fill" style="width:${Math.min(achieveRate,100)}%;background:${daySignal}"></div>
@@ -900,13 +940,13 @@
                                             <p class="kpi-blabel guest"><i class="fas fa-user-plus" style="margin-right:3px"></i>新規 ${alerts.newGuest ? '<span class="alert-dot"></span>' : ''}</p>
                                             <p class="kpi-bval guest">${s.newGuestActual}<span class="kpi-bunit">人</span></p>
                                             <p class="kpi-bsub">/ ${s.newGuestGoal}人</p>
-                                            ${alerts.newGuest ? `<p class="alert-val">乖離 ${nGapValue}</p>` : ''}
+                                            ${alerts.newGuest ? `<p class="alert-val">差分 ${nGapValue}</p>` : ''}
                                         </div>
                                         <div class="kpi-block guest ${alerts.repeatGuest ? 'alerting' : ''}">
                                             <p class="kpi-blabel guest"><i class="fas fa-redo" style="margin-right:3px"></i>再来 ${alerts.repeatGuest ? '<span class="alert-dot"></span>' : ''}</p>
                                             <p class="kpi-bval guest">${s.repeatActual}<span class="kpi-bunit">人</span></p>
                                             <p class="kpi-bsub">/ ${s.repeatGoal}人</p>
-                                            ${alerts.repeatGuest ? `<p class="alert-val">乖離 ${rGapValue}</p>` : ''}
+                                            ${alerts.repeatGuest ? `<p class="alert-val">差分 ${rGapValue}</p>` : ''}
                                         </div>
                                         <div class="kpi-block guest">
                                             <p class="kpi-blabel guest"><i class="fas fa-users" style="margin-right:3px"></i>総客数</p>
