@@ -594,7 +594,7 @@
                 document.getElementById('remaining').innerText =
                     `残り: ${Math.max(0, raw.dateInfo.endDay - raw.dateInfo.today)}日`;
 
-                const svList = [...new Set(raw.stores.slice(9).map(s => s.svName).filter(n => n))];
+                const svList = [...new Set(raw.stores.slice(9).map(s => (s.svName||"").trim()).filter(n => n))];
                 svList.forEach(name => {
                     const btn = document.createElement('button');
                     btn.innerText = name;
@@ -669,23 +669,30 @@
             let list = raw.stores.slice(9).filter(s => s.name && s.name.length > 2);
             if (currentType !== 'all') list = list.filter(s => s.category_label === currentType);
             if (brand !== 'all')       list = list.filter(s => s.name.startsWith(brand));
-            if (currentSv !== 'all')   list = list.filter(s => s.svName === currentSv);
+            if (currentSv !== 'all')   list = list.filter(s => (s.svName||"").trim() === currentSv);
 
             const sKey = (currentType === 'all') ? "全体" : currentType;
             const sRow = raw.stores.find(s => s.name === sKey) || raw.stores[0];
 
+            // kgiForecastが0の場合はkgiActual/kgiGoalから計算
+            const _kgiFc = (sRow.kgiForecast > 0) ? sRow.kgiForecast
+                : (sRow.kgiGoal > 0 ? (sRow.kgiActual||0) / sRow.kgiGoal : 0);
             document.getElementById('overall-rate').innerText =
-                Math.round((sRow.kgiForecast || 0) * 100) + "%";
+                Math.round(_kgiFc * 100) + "%";
             document.getElementById('overall-val').innerHTML =
                 `目標: ¥${Math.round(sRow.kgiGoal || 0).toLocaleString()}<br>実績: ¥${Math.round(sRow.kgiActual || 0).toLocaleString()}`;
 
+            const _nFc = (sRow.newGuestForecast > 0) ? sRow.newGuestForecast
+                : (sRow.newGuestGoal > 0 ? (sRow.newGuestActual||0) / sRow.newGuestGoal : 0);
             document.getElementById('sum-new-rate').innerText =
-                Math.round((sRow.newGuestForecast || 0) * 100) + "%";
+                Math.round(_nFc * 100) + "%";
             document.getElementById('sum-new-val').innerText =
                 `実績 ${Math.round(sRow.newGuestActual || 0)}人 / 目標 ${Math.round(sRow.newGuestGoal || 0)}人`;
 
+            const _rFc = (sRow.repeatForecast > 0) ? sRow.repeatForecast
+                : (sRow.repeatGoal > 0 ? (sRow.repeatActual||0) / sRow.repeatGoal : 0);
             document.getElementById('sum-rep-rate').innerText =
-                Math.round((sRow.repeatForecast || 0) * 100) + "%";
+                Math.round(_rFc * 100) + "%";
             document.getElementById('sum-rep-val').innerText =
                 `実績 ${Math.round(sRow.repeatActual || 0)}人 / 目標 ${Math.round(sRow.repeatGoal || 0)}人`;
 
@@ -698,7 +705,12 @@
 
             stores.forEach(s => {
                 const isD     = s.category_label === '直営';
-                const forecast = Math.round((isD ? s.kgiForecast : s.svForecast) * 100);
+                // kgiForecast/svForecastが欠落していた場合のフォールバック
+                const _rawFc  = isD ? s.kgiForecast : s.svForecast;
+                const _fc     = (_rawFc > 0) ? _rawFc
+                    : (isD && s.kgiGoal > 0 ? (s.kgiActual||0) / s.kgiGoal
+                    : (!isD && s.svGoal > 0 ? (s.svActual||0) / s.svGoal : 0));
+                const forecast = Math.round((_fc || 0) * 100);
                 const brand   = s.name.startsWith('m') ? 'most' : s.name.startsWith('S') ? 'ssin' : 'lumiss';
 
                 // 売上（直営=KGI実績、加盟=SV売上）
@@ -709,15 +721,18 @@
                 // 総客数（表示用派生値）
                 const totalGuests = (Number(s.newGuestActual) || 0) + (Number(s.repeatActual) || 0);
 
-                const nProgress = Number(s.newGuestForecast);
-                const rProgress = Number(s.repeatForecast);
+                // newGuestForecast/repeatForecastが欠落の場合フォールバック
+                const nProgress = s.newGuestForecast > 0 ? s.newGuestForecast
+                    : (s.newGuestGoal > 0 ? (s.newGuestActual||0) / s.newGuestGoal : 0);
+                const rProgress = s.repeatForecast > 0 ? s.repeatForecast
+                    : (s.repeatGoal > 0 ? (s.repeatActual||0) / s.repeatGoal : 0);
                 // 乖離 = 目標 - 月末着地見込数（目標 × 着地見込率）
-                const nGapValue = Math.round(Number(s.newGuestGoal) * (1 - nProgress));
-                const rGapValue = Math.round(Number(s.repeatGoal)   * (1 - rProgress));
+                const nGapValue = Math.round((s.newGuestGoal||0) * (1 - nProgress));
+                const rGapValue = Math.round((s.repeatGoal||0)   * (1 - rProgress));
 
                 // ===== アラート判定（変更不可） =====
                 const alerts = {
-                    sales:        (isD ? Number(s.kgiForecast) : Number(s.svForecast)) < 1.0,
+                    sales:        (_fc || 0) < 1.0,
                     newGuest:     nProgress < 1.0,
                     repeatGuest:  rProgress < 1.0,
                     nextRes:      Number(s.nextReservationRate) <= 0.35,
@@ -946,8 +961,15 @@
             // アラートバナー更新
             const _alertStores = stores.filter(s => {
                 const isD = s.category_label === '直営';
-                return (isD ? Number(s.kgiForecast) : Number(s.svForecast)) < 1.0 ||
-                       Number(s.newGuestForecast) < 1.0 || Number(s.repeatForecast) < 1.0 ||
+                const _aFc = ((isD ? s.kgiForecast : s.svForecast) > 0)
+                    ? (isD ? s.kgiForecast : s.svForecast)
+                    : (isD && s.kgiGoal > 0 ? (s.kgiActual||0)/s.kgiGoal
+                    : (!isD && s.svGoal > 0 ? (s.svActual||0)/s.svGoal : 0));
+                const _nFca = (s.newGuestForecast > 0) ? s.newGuestForecast
+                    : (s.newGuestGoal > 0 ? (s.newGuestActual||0)/s.newGuestGoal : 0);
+                const _rFca = (s.repeatForecast > 0) ? s.repeatForecast
+                    : (s.repeatGoal > 0 ? (s.repeatActual||0)/s.repeatGoal : 0);
+                return _aFc < 1.0 || _nFca < 1.0 || _rFca < 1.0 ||
                        Number(s.nextReservationRate) <= 0.35;
             });
             const _banner = document.getElementById('alert-banner');
@@ -1047,16 +1069,29 @@
 
             const _alertCount = _stList.filter(s => {
                 const isD = s.category_label === '直営';
-                return (isD ? Number(s.kgiForecast) : Number(s.svForecast)) < 1.0 ||
-                       Number(s.newGuestForecast) < 1.0 || Number(s.repeatForecast) < 1.0 ||
+                const _aFcC = ((isD ? s.kgiForecast : s.svForecast) > 0)
+                    ? (isD ? s.kgiForecast : s.svForecast)
+                    : (isD && s.kgiGoal > 0 ? (s.kgiActual||0)/s.kgiGoal
+                    : (!isD && s.svGoal > 0 ? (s.svActual||0)/s.svGoal : 0));
+                const _nFcC = (s.newGuestForecast > 0) ? s.newGuestForecast
+                    : (s.newGuestGoal > 0 ? (s.newGuestActual||0)/s.newGuestGoal : 0);
+                const _rFcC = (s.repeatForecast > 0) ? s.repeatForecast
+                    : (s.repeatGoal > 0 ? (s.repeatActual||0)/s.repeatGoal : 0);
+                return _aFcC < 1.0 || _nFcC < 1.0 || _rFcC < 1.0 ||
                        Number(s.nextReservationRate) <= 0.35;
             }).length;
             document.getElementById('ov-alert-count').innerText = _alertCount;
             document.getElementById('ov-alert-val').innerText = `${_stList.length}店舗中 ${_alertCount}店舗が要注意`;
 
             const names  = allStores.map(s => s.name);
-            const saleFc = allStores.map(s =>
-                Math.round(((s.category_label === '直営' ? s.kgiForecast : s.svForecast) || 0) * 100));
+            const saleFc = allStores.map(s => {
+                const _isD = s.category_label === '直営';
+                const _rawF = _isD ? s.kgiForecast : s.svForecast;
+                const _f = (_rawF > 0) ? _rawF
+                    : (_isD && s.kgiGoal > 0 ? (s.kgiActual||0)/s.kgiGoal
+                    : (!_isD && s.svGoal > 0 ? (s.svActual||0)/s.svGoal : 0));
+                return Math.round((_f || 0) * 100);
+            });
             const newG   = allStores.map(s => Number(s.newGuestActual)   || 0);
             const repG   = allStores.map(s => Number(s.repeatActual)     || 0);
             const uPrice = allStores.map(s => Number(s.unitPriceActual)  || 0);
