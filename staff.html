@@ -5,146 +5,214 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kiwi スタッフ日報</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@700;900&display=swap">
   <style>
     :root {
       --dark: #0f172a;
       --accent: #6d28d9;
       --green: #10b981;
       --yellow: #f59e0b;
-      --red: #ef4444;
+      --red: #ff3b30;
       --blue: #1d5fd4;
-      --bg: #f5f3ff;
+      --peach-bg: #fff7f5; --peach-bd: #fdddd8; --peach-col: #c8503e;
+      --sky-bg: #eff8ff; --sky-bd: #bfdbfe; --sky-col: #1d5fd4;
+      --lav-bg: #f5f3ff; --lav-bd: #ddd6fe; --lav-col: #6d28d9;
+      --page-bg: linear-gradient(150deg, #edf0f7 0%, #f3eef8 100%);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); min-height: 100vh; color: var(--dark); }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--page-bg); min-height: 100vh; color: var(--dark); -webkit-font-smoothing: antialiased; }
 
-    /* ===== ログイン画面 ===== */
+    /* ===== ログイン ===== */
     #login-screen {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 24px; background: linear-gradient(135deg, #1e1b4b, #312e81);
+      min-height: 100vh; padding: 24px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
     }
-    #login-screen .logo { font-size: 32px; font-weight: 900; color: white; margin-bottom: 8px; letter-spacing: -0.03em; }
-    #login-screen .sub { font-size: 11px; color: #a5b4fc; margin-bottom: 36px; font-weight: 700; letter-spacing: 0.1em; }
+    .login-logo { font-family: 'Noto Serif JP', serif; font-size: 42px; font-weight: 900; color: white; letter-spacing: -0.04em; }
+    .login-sub { font-size: 10px; color: #818cf8; margin-top: 4px; margin-bottom: 40px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
     #login-box {
-      background: white; border-radius: 24px; padding: 32px 28px; width: 100%; max-width: 340px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      background: white; border-radius: 28px; padding: 36px 30px; width: 100%; max-width: 340px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.35);
     }
-    #login-box h2 { font-size: 13px; font-weight: 900; color: var(--dark); margin-bottom: 20px; text-align: center; }
+    #login-box h2 { font-size: 12px; font-weight: 900; color: var(--dark); margin-bottom: 24px; text-align: center; letter-spacing: 0.05em; }
     #pin-input {
-      width: 100%; padding: 16px; font-size: 24px; font-weight: 900; text-align: center;
-      border: 2px solid #e2e8f0; border-radius: 16px; letter-spacing: 12px;
-      outline: none; -webkit-text-security: disc;
+      width: 100%; padding: 18px; font-size: 28px; font-weight: 900; text-align: center;
+      border: 2px solid #e2e8f0; border-radius: 16px; letter-spacing: 16px;
+      outline: none; -webkit-text-security: disc; transition: border-color 0.2s;
     }
-    #pin-input:focus { border-color: var(--accent); }
+    #pin-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(109,40,217,0.1); }
     #login-btn {
-      width: 100%; padding: 14px; margin-top: 16px; background: var(--dark); color: white;
+      width: 100%; padding: 16px; margin-top: 18px; background: var(--dark); color: white;
       border: none; border-radius: 16px; font-size: 13px; font-weight: 900; cursor: pointer;
-      transition: opacity 0.2s;
+      letter-spacing: 0.05em; transition: all 0.2s;
     }
-    #login-btn:hover { opacity: 0.9; }
-    #login-btn:disabled { opacity: 0.5; }
-    #login-error { color: var(--red); font-size: 11px; font-weight: 700; text-align: center; margin-top: 12px; min-height: 16px; }
+    #login-btn:hover { background: #1e293b; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    #login-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+    #login-error { color: var(--red); font-size: 11px; font-weight: 700; text-align: center; margin-top: 14px; min-height: 16px; }
 
-    /* ===== メインダッシュボード ===== */
+    /* ===== ヘッダー ===== */
     #dashboard { display: none; }
     .header {
-      background: var(--dark); color: white; padding: 16px 20px;
+      background: var(--dark); color: white; padding: 18px 20px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
-    .header-name { font-size: 14px; font-weight: 900; }
-    .header-store { font-size: 10px; opacity: 0.6; font-weight: 700; }
-    .header-logout { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 14px; border-radius: 10px; font-size: 10px; font-weight: 700; cursor: pointer; }
-    .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+    .hdr-left { display: flex; align-items: center; gap: 12px; }
+    .hdr-avatar {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 900; color: white;
+    }
+    .hdr-name { font-family: 'Noto Serif JP', serif; font-size: 15px; font-weight: 900; }
+    .hdr-store { font-size: 9px; opacity: 0.5; font-weight: 700; margin-top: 2px; letter-spacing: 0.05em; }
+    .hdr-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 7px 14px; border-radius: 10px; font-size: 9px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; }
 
-    /* 月選択 */
+    .container { padding: 16px; max-width: 640px; margin: 0 auto; }
+
+    /* ===== 月選択 ===== */
     .month-bar { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+    .month-bar::-webkit-scrollbar { display: none; }
     .month-btn {
-      padding: 8px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0;
-      background: white; font-size: 11px; font-weight: 900; color: #64748b;
-      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      padding: 9px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+      background: white; font-size: 11px; font-weight: 900; color: #94a3b8;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
     }
-    .month-btn.active { background: var(--dark); color: white; border-color: var(--dark); }
+    .month-btn:hover { border-color: #cbd5e1; color: #64748b; }
+    .month-btn.active { background: var(--dark); color: white; border-color: var(--dark); box-shadow: 0 4px 12px rgba(15,23,42,0.2); }
 
-    /* 管理者用 */
-    .admin-bar { margin-bottom: 12px; }
+    /* ===== 管理者 ===== */
+    .admin-bar { margin-bottom: 14px; }
     .admin-bar select {
-      width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+      width: 100%; padding: 12px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0;
       font-size: 12px; font-weight: 700; background: white; color: var(--dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
-    /* カード */
-    .card {
-      background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px;
-      box-shadow: 0 4px 16px rgba(15,23,42,0.06);
+    /* ===== KGI売上カード ===== */
+    .kgi-card {
+      background: var(--dark); border-radius: 24px; padding: 24px; margin-bottom: 16px;
+      color: white; text-align: center; position: relative; overflow: hidden;
+      box-shadow: 0 20px 50px -10px rgba(15,23,42,0.3);
     }
-    .card-accent { border-left: 5px solid var(--accent); }
-    .card-green  { border-left: 5px solid var(--green); }
-    .card-yellow { border-left: 5px solid var(--yellow); }
-    .card-blue   { border-left: 5px solid var(--blue); }
-    .card-dark   { border: 2px solid var(--dark); }
-    .card-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px; }
-    .card-value { font-size: 28px; font-weight: 900; line-height: 1; }
-    .card-sub { font-size: 10px; font-weight: 700; color: #94a3b8; margin-top: 6px; }
+    .kgi-card::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 120px; height: 120px; border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .kgi-label { font-size: 8px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px; }
+    .kgi-value { font-family: 'Noto Serif JP', serif; font-size: 36px; font-weight: 900; font-style: italic; line-height: 1; }
+    .kgi-sub { font-size: 10px; font-weight: 700; opacity: 0.45; margin-top: 10px; }
+    .kgi-pills { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+    .kgi-pill { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 10px; font-size: 9px; font-weight: 700; }
 
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    /* ===== セクション ===== */
+    .section { margin-bottom: 20px; }
+    .section-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 8px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 99px; margin-bottom: 10px;
+    }
+    .chip-guest { background: var(--peach-bd); color: var(--peach-col); }
+    .chip-eff { background: var(--sky-bd); color: var(--sky-col); }
+    .chip-add { background: var(--lav-bd); color: var(--lav-col); }
+    .chip-fire { background: #fee2e2; color: var(--red); }
 
-    .section-title { font-size: 11px; font-weight: 900; color: var(--dark); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }
-    .section-title i { color: var(--accent); }
+    /* ===== KPIカード ===== */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi {
+      border-radius: 18px; padding: 14px 16px; position: relative; overflow: hidden;
+      border: 1.5px solid #e2e8f0; background: white;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .kpi:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); transform: translateY(-1px); }
+    .kpi.guest { background: var(--peach-bg); border-color: var(--peach-bd); }
+    .kpi.eff   { background: var(--sky-bg); border-color: var(--sky-bd); }
+    .kpi.add   { background: var(--lav-bg); border-color: var(--lav-bd); }
+    .kpi-label { font-size: 8px; font-weight: 900; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-label.guest { color: var(--peach-col); }
+    .kpi-label.eff { color: var(--sky-col); }
+    .kpi-label.add { color: var(--lav-col); }
+    .kpi-val { font-family: 'Noto Serif JP', serif; font-size: 22px; font-weight: 900; font-style: italic; line-height: 1; }
+    .kpi-val.guest { color: var(--peach-col); }
+    .kpi-val.eff { color: var(--sky-col); }
+    .kpi-val.add { color: var(--lav-col); }
+    .kpi-sub { font-size: 8px; color: #94a3b8; font-weight: 700; margin-top: 4px; }
 
-    /* 頑張ったこと */
-    .effort-item { padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
-    .effort-date { font-size: 9px; font-weight: 900; color: #94a3b8; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-bottom: 6px; }
-    .effort-text { font-size: 13px; font-weight: 700; line-height: 1.6; }
-    .effort-fb { margin-top: 8px; background: linear-gradient(135deg,#f8fafc,#f3eef8); border-radius: 12px; padding: 12px 14px; border-left: 3px solid var(--accent); }
-    .effort-fb-label { font-size: 8px; font-weight: 900; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
-    .effort-fb-text { font-size: 11px; line-height: 1.8; white-space: pre-wrap; }
+    /* 進捗バー */
+    .pbar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+    .pbar-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+    .pbar-fill.green { background: linear-gradient(90deg, #34d399, #10b981); }
+    .pbar-fill.yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    .pbar-fill.red { background: linear-gradient(90deg, #f87171, #ef4444); }
+
+    /* ===== 頑張ったこと ===== */
+    .effort-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 16px rgba(15,23,42,0.06); margin-top: 10px; }
+    .effort-item { padding: 16px 0; border-bottom: 1px solid #f1f5f9; }
+    .effort-item:last-child { border-bottom: none; }
+    .effort-date {
+      font-size: 9px; font-weight: 900; color: white; background: var(--dark);
+      padding: 3px 10px; border-radius: 8px; display: inline-block; margin-bottom: 8px;
+    }
+    .effort-text { font-size: 13px; font-weight: 700; line-height: 1.7; color: #334155; }
+    .effort-fb {
+      margin-top: 10px; background: linear-gradient(135deg, #faf8ff, #f3eef8);
+      border-radius: 14px; padding: 14px 16px; border-left: 3px solid var(--accent);
+    }
+    .effort-fb-label { font-size: 7px; font-weight: 900; color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .effort-fb-text { font-size: 11px; line-height: 1.9; white-space: pre-wrap; color: #475569; }
     .fb-btn {
-      margin-top: 6px; padding: 6px 14px; background: var(--accent); color: white;
-      border: none; border-radius: 10px; font-size: 10px; font-weight: 700; cursor: pointer;
+      margin-top: 8px; padding: 8px 16px; background: var(--accent); color: white;
+      border: none; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.03em;
     }
-    .fb-btn:disabled { opacity: 0.5; }
+    .fb-btn:hover { background: #5b21b6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(109,40,217,0.3); }
+    .fb-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; }
 
+    /* ===== ユーティリティ ===== */
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; padding: 50px 20px; color: #94a3b8; }
+    .empty i { font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.4; }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .empty { text-align: center; padding: 40px 20px; color: #94a3b8; }
-    .empty i { font-size: 40px; margin-bottom: 12px; display: block; }
-
-    /* ローディングオーバーレイ */
     .loading-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15,23,42,0.6); display: flex; align-items: center; justify-content: center;
-      z-index: 999;
+      background: rgba(15,23,42,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
     }
-    .loading-box { background: white; border-radius: 20px; padding: 32px; text-align: center; }
-    .loading-box .spinner { width: 28px; height: 28px; border-width: 3px; border-color: rgba(109,40,217,0.2); border-top-color: var(--accent); }
-    .loading-box p { margin-top: 12px; font-size: 12px; font-weight: 700; color: #64748b; }
+    .loading-box { background: white; border-radius: 24px; padding: 36px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .loading-box .spinner { width: 32px; height: 32px; border-width: 3px; border-color: rgba(109,40,217,0.15); border-top-color: var(--accent); }
+    .loading-box p { margin-top: 14px; font-size: 12px; font-weight: 700; color: #64748b; }
   </style>
 </head>
 <body>
 
-<!-- ===== ログイン画面 ===== -->
+<!-- ===== ログイン ===== -->
 <div id="login-screen">
-  <p class="logo">Kiwi</p>
-  <p class="sub">STAFF DASHBOARD</p>
+  <p class="login-logo">Kiwi</p>
+  <p class="login-sub">Staff Dashboard</p>
   <div id="login-box">
-    <h2><i class="fas fa-lock" style="margin-right:6px; color:var(--accent)"></i> PINを入力</h2>
+    <h2><i class="fas fa-lock" style="margin-right:6px; color:var(--accent)"></i> PINコードを入力</h2>
     <input type="password" id="pin-input" maxlength="4" placeholder="----" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
     <button id="login-btn" onclick="doLogin()">ログイン</button>
     <p id="login-error"></p>
   </div>
 </div>
 
-<!-- ===== メインダッシュボード ===== -->
+<!-- ===== ダッシュボード ===== -->
 <div id="dashboard">
   <div class="header">
-    <div>
-      <p class="header-name" id="hdr-name"></p>
-      <p class="header-store" id="hdr-store"></p>
+    <div class="hdr-left">
+      <div class="hdr-avatar" id="hdr-avatar"></div>
+      <div>
+        <p class="hdr-name" id="hdr-name"></p>
+        <p class="hdr-store" id="hdr-store"></p>
+      </div>
     </div>
-    <button class="header-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> ログアウト</button>
+    <button class="hdr-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> ログアウト</button>
   </div>
 
   <div class="container">
@@ -158,268 +226,186 @@
   </div>
 </div>
 
-<!-- ===== ローディング ===== -->
 <div id="loading-overlay" class="loading-overlay" style="display:none">
-  <div class="loading-box">
-    <div class="spinner"></div>
-    <p id="loading-text">読み込み中...</p>
-  </div>
+  <div class="loading-box"><div class="spinner"></div><p id="loading-text">読み込み中...</p></div>
 </div>
 
 <script>
-  // ===== GAS API URL =====
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbyLJLwnzWMJbFX_5nanQZC5hVQGz7edy1jXgMZnGxZF6bZcg4DMFCD_bhjR6quBi_QWAA/exec';
+  var _pin='', _auth=null, _nippo=null, _selectedMonth='', _selectedStaff='';
 
-  var _pin = '';
-  var _auth = null;
-  var _nippo = null;
-  var _selectedMonth = '';
-  var _selectedStaff = '';
+  document.getElementById('pin-input').addEventListener('keyup', function(e) { if(e.key==='Enter') doLogin(); });
 
-  // Enterキー対応
-  document.getElementById('pin-input').addEventListener('keyup', function(e) {
-    if (e.key === 'Enter') doLogin();
-  });
+  function showLoading(t){ document.getElementById('loading-text').textContent=t||'読み込み中...'; document.getElementById('loading-overlay').style.display='flex'; }
+  function hideLoading(){ document.getElementById('loading-overlay').style.display='none'; }
 
-  function showLoading(text) {
-    document.getElementById('loading-text').textContent = text || '読み込み中...';
-    document.getElementById('loading-overlay').style.display = 'flex';
-  }
-  function hideLoading() {
-    document.getElementById('loading-overlay').style.display = 'none';
+  function fetchAPI(action,params,cb){
+    var url=GAS_URL+'?action='+action;
+    for(var k in params){ if(params[k]) url+='&'+k+'='+encodeURIComponent(params[k]); }
+    fetch(url).then(function(r){ return r.json(); }).then(cb).catch(function(e){ cb({error:String(e)}); });
   }
 
-  // ===== API呼び出し =====
-  function fetchAPI(action, params, callback) {
-    var url = GAS_URL + '?action=' + action;
-    for (var k in params) {
-      if (params[k]) url += '&' + k + '=' + encodeURIComponent(params[k]);
-    }
-    fetch(url)
-      .then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(callback)
-      .catch(function(e) { callback({ error: String(e) }); });
-  }
-
-  // ===== ログイン =====
-  function doLogin() {
-    var pin = document.getElementById('pin-input').value.trim();
-    if (!pin) return;
-    _pin = pin;
-
-    var btn = document.getElementById('login-btn');
-    var err = document.getElementById('login-error');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
-    err.textContent = '';
-
-    fetchAPI('staffAuth', { pin: pin }, function(data) {
-      btn.disabled = false;
-      btn.innerHTML = 'ログイン';
-      if (data.valid) {
-        _auth = { staffName: data.staffName, role: data.role };
-        loadData();
-      } else {
-        err.textContent = data.error || 'PINが正しくありません';
-        document.getElementById('pin-input').value = '';
-        document.getElementById('pin-input').focus();
-      }
+  function doLogin(){
+    var pin=document.getElementById('pin-input').value.trim(); if(!pin) return; _pin=pin;
+    var btn=document.getElementById('login-btn'), err=document.getElementById('login-error');
+    btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'; err.textContent='';
+    fetchAPI('staffAuth',{pin:pin},function(d){
+      btn.disabled=false; btn.innerHTML='ログイン';
+      if(d.valid){ _auth={staffName:d.staffName,role:d.role}; loadData(); }
+      else{ err.textContent=d.error||'PINが正しくありません'; document.getElementById('pin-input').value=''; document.getElementById('pin-input').focus(); }
     });
   }
 
-  // ===== データ読み込み =====
-  function loadData() {
+  function loadData(){
     showLoading('データ読み込み中...');
-    fetchAPI('staffData', { pin: _pin }, function(data) {
+    fetchAPI('staffData',{pin:_pin},function(d){
       hideLoading();
-      if (data.error) {
-        alert('データ取得エラー: ' + data.error);
-        return;
-      }
-      _nippo = data.staffNippo;
-      showDashboard();
+      if(d.error){ alert('エラー: '+d.error); return; }
+      _nippo=d.staffNippo; showDashboard();
     });
   }
 
-  // ===== ダッシュボード表示 =====
-  function showDashboard() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('hdr-name').textContent = _auth.staffName + (_auth.role === 'admin' ? '（管理者）' : '');
-    document.getElementById('hdr-store').textContent = '';
-
-    if (_auth.role === 'admin' && _nippo && _nippo.staffList && _nippo.staffList.length > 0) {
-      document.getElementById('admin-bar').style.display = 'block';
-      var sel = document.getElementById('admin-staff-select');
-      sel.innerHTML = '<option value="">--- スタッフを選択 ---</option>';
-      _nippo.staffList.forEach(function(s) {
-        var opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = s.name + '（' + s.store + '）';
-        sel.appendChild(opt);
-      });
-      if (_nippo.staffList.length === 1) {
-        sel.value = _nippo.staffList[0].name;
-      }
+  function showDashboard(){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    var initial = _auth.staffName.charAt(0);
+    document.getElementById('hdr-avatar').textContent = initial;
+    document.getElementById('hdr-name').textContent=_auth.staffName+(_auth.role==='admin'?' (Admin)':'');
+    document.getElementById('hdr-store').textContent='';
+    if(_auth.role==='admin' && _nippo && _nippo.staffList && _nippo.staffList.length>0){
+      document.getElementById('admin-bar').style.display='block';
+      var sel=document.getElementById('admin-staff-select');
+      sel.innerHTML='<option value="">--- スタッフを選択 ---</option>';
+      _nippo.staffList.forEach(function(s){ var o=document.createElement('option'); o.value=s.name; o.textContent=s.name+'（'+s.store+'）'; sel.appendChild(o); });
+      if(_nippo.staffList.length===1) sel.value=_nippo.staffList[0].name;
     }
-    buildMonthBar();
-    renderDashboard();
+    buildMonthBar(); renderDashboard();
   }
 
-  function buildMonthBar() {
-    var months = {};
-    if (_nippo && _nippo.monthlyData) {
-      for (var k in _nippo.monthlyData) {
-        months[k.split('___')[0]] = true;
-      }
-    }
-    var sorted = Object.keys(months).sort().reverse();
-    var bar = document.getElementById('month-bar');
-    bar.innerHTML = '';
-    if (sorted.length === 0) { _selectedMonth = ''; return; }
-    _selectedMonth = sorted[0];
-    sorted.forEach(function(m) {
-      var btn = document.createElement('button');
-      btn.className = 'month-btn' + (m === _selectedMonth ? ' active' : '');
-      btn.textContent = m.replace('-', '年') + '月';
-      btn.onclick = function() {
-        _selectedMonth = m;
-        bar.querySelectorAll('.month-btn').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        renderDashboard();
-      };
+  function buildMonthBar(){
+    var months={};
+    if(_nippo&&_nippo.monthlyData){ for(var k in _nippo.monthlyData){ months[k.split('___')[0]]=true; } }
+    var sorted=Object.keys(months).sort().reverse();
+    var bar=document.getElementById('month-bar'); bar.innerHTML='';
+    if(!sorted.length){ _selectedMonth=''; return; }
+    _selectedMonth=sorted[0];
+    sorted.forEach(function(m){
+      var btn=document.createElement('button');
+      btn.className='month-btn'+(m===_selectedMonth?' active':'');
+      btn.textContent=m.replace('-','年')+'月';
+      btn.onclick=function(){ _selectedMonth=m; bar.querySelectorAll('.month-btn').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); renderDashboard(); };
       bar.appendChild(btn);
     });
   }
 
-  // ===== メイン描画 =====
-  function renderDashboard() {
-    var area = document.getElementById('data-area');
-    var targetStaff = _auth.role === 'admin'
-      ? document.getElementById('admin-staff-select').value
-      : _auth.staffName;
-    _selectedStaff = targetStaff;
-
-    if (!targetStaff || !_selectedMonth || !_nippo) {
-      area.innerHTML = '<div class="empty"><i class="fas fa-user-clock"></i><p style="font-size:13px;font-weight:900">スタッフと月を選択してください</p></div>';
-      return;
+  function renderDashboard(){
+    var area=document.getElementById('data-area');
+    var ts=_auth.role==='admin'?document.getElementById('admin-staff-select').value:_auth.staffName;
+    _selectedStaff=ts;
+    if(!ts||!_selectedMonth||!_nippo){
+      area.innerHTML='<div class="empty"><i class="fas fa-user-clock"></i><p style="font-size:14px;font-weight:900">スタッフと月を選択してください</p></div>'; return;
     }
+    var d=_nippo.monthlyData[_selectedMonth+'___'+ts];
+    if(!d){ area.innerHTML='<div class="empty"><i class="fas fa-search"></i><p style="font-size:14px;font-weight:900">データがありません</p><p style="font-size:10px;margin-top:8px;opacity:0.6">'+ts+' / '+_selectedMonth.replace('-','年')+'月</p></div>'; return; }
+    document.getElementById('hdr-store').textContent=d.storeName+' / '+_selectedMonth.replace('-','年')+'月';
 
-    var key = _selectedMonth + '___' + targetStaff;
-    var d = _nippo.monthlyData[key];
-    if (!d) {
-      area.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p style="font-size:13px;font-weight:900">データがありません</p><p style="font-size:10px;margin-top:6px">' + targetStaff + ' / ' + _selectedMonth.replace('-','年') + '月</p></div>';
-      return;
-    }
+    var h='<div class="fade-in">';
 
-    document.getElementById('hdr-store').textContent = d.storeName + ' / ' + _selectedMonth.replace('-','年') + '月';
-
-    var html = '';
-
-    // 売上
-    html += '<div class="card card-dark" style="text-align:center">'
-      + '<p class="card-label">月間総売上</p>'
-      + '<p class="card-value">¥' + num(d.totalSales) + '</p>'
-      + '<p class="card-sub">出勤 ' + d.workDays + '日 / 日平均 ¥' + num(Math.round(d.avgSalesPerDay)) + '</p></div>';
+    // KGI
+    h+='<div class="kgi-card"><p class="kgi-label">Monthly Sales</p>'
+      +'<p class="kgi-value">¥'+num(d.totalSales)+'</p>'
+      +'<p class="kgi-sub">出勤 '+d.workDays+'日 ／ 日平均 ¥'+num(Math.round(d.avgSalesPerDay))+'</p>'
+      +'<div class="kgi-pills">'
+      +'<span class="kgi-pill"><i class="fas fa-user-plus" style="margin-right:4px"></i>新規 '+d.newGuests+'</span>'
+      +'<span class="kgi-pill"><i class="fas fa-redo" style="margin-right:4px"></i>再来 '+d.repeatGuests+'</span>'
+      +'<span class="kgi-pill"><i class="fas fa-users" style="margin-right:4px"></i>合計 '+d.totalGuests+'人</span>'
+      +'</div></div>';
 
     // 客数
-    html += '<div class="kpi-grid">'
-      + kpiCard('総客数', d.totalGuests + '人', '新規 ' + d.newGuests + ' / 再来 ' + d.repeatGuests, 'blue')
-      + kpiCard('再来率', pctStr(d.repeatRate), '再来 ' + d.repeatGuests + ' / 全 ' + d.totalGuests, 'blue', d.repeatRate)
-      + '</div>';
+    h+='<div class="section"><span class="section-chip chip-guest"><i class="fas fa-users"></i> 客数・再来</span>'
+      +'<div class="kpi-grid">'
+      +kpi('総客数',d.totalGuests+'人','新規 '+d.newGuests+' / 再来 '+d.repeatGuests,'guest')
+      +kpi('再来率',pct(d.repeatRate),'再来 '+d.repeatGuests+' / 全 '+d.totalGuests,'guest',d.repeatRate,0.5)
+      +'</div></div>';
 
     // 次回予約
-    html += '<p class="section-title"><i class="fas fa-calendar-check"></i> 次回予約</p>';
-    html += '<div class="kpi-grid">'
-      + kpiCard('総合', pctStr(d.nextResRate), (d.newNextRes + d.repeatNextRes) + ' / ' + d.totalGuests + '客', 'accent', d.nextResRate, 0.35)
-      + kpiCard('新規', pctStr(d.newNextResRate), d.newNextRes + ' / ' + d.newGuests + '新規', 'accent', d.newNextResRate, 0.35)
-      + kpiCard('再来', pctStr(d.repeatNextResRate), d.repeatNextRes + ' / ' + d.repeatGuests + '再来', 'accent', d.repeatNextResRate, 0.35)
-      + kpiCard('回数券率', pctStr(d.ticketRate), '初回' + d.firstTicket + ' 継続' + d.continueTicket, 'yellow')
-      + '</div>';
+    h+='<div class="section"><span class="section-chip chip-eff"><i class="fas fa-calendar-check"></i> 次回予約</span>'
+      +'<div class="kpi-grid">'
+      +kpi('総合',pct(d.nextResRate),(d.newNextRes+d.repeatNextRes)+' / '+d.totalGuests+'客','eff',d.nextResRate,0.35)
+      +kpi('新規',pct(d.newNextResRate),d.newNextRes+' / '+d.newGuests+'新規','eff',d.newNextResRate,0.35)
+      +kpi('再来',pct(d.repeatNextResRate),d.repeatNextRes+' / '+d.repeatGuests+'再来','eff',d.repeatNextResRate,0.35)
+      +kpi('回数券率',pct(d.ticketRate),'初回'+d.firstTicket+' 継続'+d.continueTicket,'eff',d.ticketRate,0.2)
+      +'</div></div>';
 
     // 売上内訳
-    html += '<p class="section-title"><i class="fas fa-yen-sign"></i> 売上内訳</p>';
-    html += '<div class="kpi-grid">'
-      + kpiCard('物販率', pctStr(d.productRate), '¥' + num(d.productSales), 'green', d.productRate, 0.10)
-      + kpiCard('物販獲得率', pctStr(d.productCountRate), d.productCount + ' / ' + d.totalGuests + '客', 'green')
-      + kpiCard('回数券売上', '¥' + num(d.ticketSales), '初回' + d.firstTicket + '件 継続' + d.continueTicket + '件', 'yellow')
-      + kpiCard('OP売上', '¥' + num(d.opSales), '口コミ星5: ' + d.reviewStar5 + '件', 'accent')
-      + '</div>';
+    h+='<div class="section"><span class="section-chip chip-add"><i class="fas fa-yen-sign"></i> 売上内訳</span>'
+      +'<div class="kpi-grid">'
+      +kpi('物販率',pct(d.productRate),'¥'+num(d.productSales),'add',d.productRate,0.10)
+      +kpi('物販獲得率',pct(d.productCountRate),d.productCount+' / '+d.totalGuests+'客','add')
+      +kpi('回数券売上','¥'+num(d.ticketSales),'初回'+d.firstTicket+'件 継続'+d.continueTicket+'件','add')
+      +kpi('OP売上','¥'+num(d.opSales),'口コミ星5: '+d.reviewStar5+'件','add')
+      +'</div></div>';
 
     // 頑張ったこと
-    html += '<p class="section-title"><i class="fas fa-fire" style="color:var(--red)"></i> 頑張ったこと & AIフィードバック</p>';
-    html += '<div class="card">';
-    if (d.efforts && d.efforts.length > 0) {
-      d.efforts.slice().reverse().forEach(function(e, idx) {
-        html += '<div class="effort-item">'
-          + '<span class="effort-date">' + e.date + '</span>'
-          + '<p class="effort-text">' + esc(e.text) + '</p>'
-          + '<div id="fb-' + idx + '"></div>'
-          + '<button class="fb-btn" id="fb-btn-' + idx + '" onclick="getAiFeedback(' + idx + ',\'' + escJs(targetStaff) + '\',\'' + escJs(e.text) + '\',\'' + e.date + '\')">'
-          + '<i class="fas fa-robot"></i> AIフィードバック</button></div>';
+    h+='<div class="section"><span class="section-chip chip-fire"><i class="fas fa-fire"></i> 頑張ったこと</span>';
+    h+='<div class="effort-card">';
+    if(d.efforts&&d.efforts.length>0){
+      d.efforts.slice().reverse().forEach(function(e,i){
+        h+='<div class="effort-item"><span class="effort-date">'+e.date+'</span>'
+          +'<p class="effort-text">'+esc(e.text)+'</p>'
+          +'<div id="fb-'+i+'"></div>'
+          +'<button class="fb-btn" id="fb-btn-'+i+'" onclick="getAiFeedback('+i+',\''+escJs(ts)+'\',\''+escJs(e.text)+'\',\''+e.date+'\')">'
+          +'<i class="fas fa-robot" style="margin-right:4px"></i>AIフィードバック</button></div>';
       });
     } else {
-      html += '<p style="text-align:center;color:#94a3b8;font-size:11px;padding:20px 0">記録なし</p>';
+      h+='<p style="text-align:center;color:#94a3b8;font-size:11px;padding:24px 0"><i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.3"></i>記録なし</p>';
     }
-    html += '</div>';
+    h+='</div></div>';
 
-    area.innerHTML = html;
+    h+='</div>';
+    area.innerHTML=h;
   }
 
-  function kpiCard(label, value, sub, color, rate, threshold) {
-    var col = 'var(--' + color + ')';
-    if (rate !== undefined && threshold !== undefined) {
-      col = rate >= threshold * 1.3 ? 'var(--green)' : rate >= threshold ? 'var(--yellow)' : 'var(--red)';
+  function kpi(label,value,sub,type,rate,threshold){
+    var barHtml='';
+    if(rate!==undefined){
+      var pctW=Math.min(Math.round(rate*100),100);
+      var cls=threshold?(rate>=threshold*1.3?'green':rate>=threshold?'yellow':'red'):'green';
+      barHtml='<div class="pbar"><div class="pbar-fill '+cls+'" style="width:'+pctW+'%"></div></div>';
     }
-    return '<div class="card card-' + color + '">'
-      + '<p class="card-label">' + label + '</p>'
-      + '<p class="card-value" style="color:' + col + ';font-size:22px">' + value + '</p>'
-      + '<p class="card-sub">' + sub + '</p></div>';
+    return '<div class="kpi '+type+'">'
+      +'<p class="kpi-label '+type+'">'+label+'</p>'
+      +'<p class="kpi-val '+type+'">'+value+'</p>'
+      +'<p class="kpi-sub">'+sub+'</p>'
+      +barHtml+'</div>';
   }
 
-  function pctStr(v) { return Math.round((v || 0) * 100) + '%'; }
-  function num(v) { return (v || 0).toLocaleString(); }
+  function pct(v){ return Math.round((v||0)*100)+'%'; }
+  function num(v){ return (v||0).toLocaleString(); }
 
-  // ===== AIフィードバック =====
-  function getAiFeedback(idx, staffName, effort, date) {
-    var btn = document.getElementById('fb-btn-' + idx);
-    var fb  = document.getElementById('fb-' + idx);
-    if (!btn || !fb) return;
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:white"></span> 分析中...';
-
-    fetchAPI('staffFeedback', { pin: _pin, staffName: staffName, effort: effort, date: date }, function(data) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-robot"></i> 再取得';
-      if (data.feedback) {
-        fb.innerHTML = '<div class="effort-fb">'
-          + '<p class="effort-fb-label"><i class="fas fa-robot"></i> AI Coach</p>'
-          + '<p class="effort-fb-text">' + esc(data.feedback) + '</p></div>';
-      } else {
-        fb.innerHTML = '<p style="color:var(--red);font-size:10px;margin-top:4px">' + (data.error || 'エラー') + '</p>';
-      }
+  function getAiFeedback(i,name,effort,date){
+    var btn=document.getElementById('fb-btn-'+i), fb=document.getElementById('fb-'+i);
+    if(!btn||!fb) return;
+    btn.disabled=true; btn.innerHTML='<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:white"></span> 分析中...';
+    fetchAPI('staffFeedback',{pin:_pin,staffName:name,effort:effort,date:date},function(d){
+      btn.disabled=false; btn.innerHTML='<i class="fas fa-robot" style="margin-right:4px"></i>再取得';
+      if(d.feedback){ fb.innerHTML='<div class="effort-fb"><p class="effort-fb-label"><i class="fas fa-robot"></i> AI Coach</p><p class="effort-fb-text">'+esc(d.feedback)+'</p></div>'; }
+      else{ fb.innerHTML='<p style="color:var(--red);font-size:10px;margin-top:4px">'+(d.error||'エラー')+'</p>'; }
     });
   }
 
-  // ===== ログアウト =====
-  function doLogout() {
-    _pin = ''; _auth = null; _nippo = null;
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('pin-input').value = '';
-    document.getElementById('login-error').textContent = '';
-    document.getElementById('data-area').innerHTML = '';
-    document.getElementById('admin-bar').style.display = 'none';
+  function doLogout(){
+    _pin=''; _auth=null; _nippo=null;
+    document.getElementById('dashboard').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('pin-input').value='';
+    document.getElementById('login-error').textContent='';
+    document.getElementById('data-area').innerHTML='';
+    document.getElementById('admin-bar').style.display='none';
   }
 
-  // ===== ユーティリティ =====
-  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-  function escJs(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function escJs(s){ return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 </script>
-
 </body>
 </html>
