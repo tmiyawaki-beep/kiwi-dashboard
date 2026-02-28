@@ -83,7 +83,7 @@
     .month-btn:hover { border-color: #cbd5e1; color: #64748b; }
     .month-btn.active { background: var(--dark); color: white; border-color: var(--dark); box-shadow: 0 4px 12px rgba(15,23,42,0.2); }
 
-    /* ===== 管理者 ===== */
+    /* ===== 管理者/店長バー ===== */
     .admin-bar { margin-bottom: 14px; }
     .admin-bar select {
       width: 100%; padding: 12px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0;
@@ -102,6 +102,7 @@
       width: 120px; height: 120px; border-radius: 50%;
       background: rgba(255,255,255,0.04);
     }
+    .kgi-card.store-card { background: linear-gradient(135deg, #1e1b4b, #312e81); }
     .kgi-label { font-size: 8px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px; }
     .kgi-value { font-family: 'Noto Serif JP', serif; font-size: 36px; font-weight: 900; font-style: italic; line-height: 1; }
     .kgi-sub { font-size: 10px; font-weight: 700; opacity: 0.45; margin-top: 10px; }
@@ -126,7 +127,6 @@
       background: rgba(255,255,255,0.06);
     }
     .next-res-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
-    .next-res-left {}
     .next-res-label { font-size: 9px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.8; margin-bottom: 4px; }
     .next-res-value { font-family: 'Noto Serif JP', serif; font-size: 44px; font-weight: 900; font-style: italic; line-height: 1; }
     .next-res-count { font-size: 10px; font-weight: 700; opacity: 0.7; margin-top: 4px; }
@@ -152,10 +152,10 @@
     .chip-add { background: var(--lav-bd); color: var(--lav-col); }
     .chip-fire { background: #fee2e2; color: var(--red); }
     .chip-money { background: var(--mint-bd); color: var(--mint-col); }
+    .chip-store { background: #e0e7ff; color: #3730a3; }
 
     /* ===== KPIカード ===== */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .kpi-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
     .kpi {
       border-radius: 18px; padding: 14px 16px; position: relative; overflow: hidden;
       border: 1.5px solid #e2e8f0; background: white;
@@ -185,23 +185,58 @@
     .pbar-fill.yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
     .pbar-fill.red { background: linear-gradient(90deg, #f87171, #ef4444); }
 
+    /* ===== 店舗サマリー: スタッフ一覧カード ===== */
+    .staff-card {
+      background: white; border-radius: 20px; padding: 16px; margin-bottom: 12px;
+      border: 1.5px solid #e2e8f0; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .staff-card:hover { border-color: var(--accent); box-shadow: 0 6px 20px rgba(109,40,217,0.1); transform: translateY(-2px); }
+    .staff-card:active { transform: translateY(0); }
+    .staff-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .staff-card-avatar {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--dark), #334155);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+    .staff-card-name { font-family: 'Noto Serif JP', serif; font-size: 14px; font-weight: 900; }
+    .staff-card-sales { font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 900; font-style: italic; color: var(--dark); }
+    .staff-card-right { margin-left: auto; text-align: right; }
+    .staff-card-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 12px; }
+    .staff-card-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+    .staff-card-metric { text-align: center; padding: 8px 4px; background: #f8fafc; border-radius: 10px; }
+    .staff-card-metric-label { font-size: 7px; font-weight: 900; color: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; }
+    .staff-card-metric-val { font-family: 'Noto Serif JP', serif; font-size: 14px; font-weight: 900; font-style: italic; margin-top: 2px; }
+    .staff-card-metric-val.good { color: var(--green); }
+    .staff-card-metric-val.warn { color: var(--yellow); }
+    .staff-card-metric-val.bad { color: var(--red); }
+    .staff-card-metric-val.neutral { color: var(--dark); }
+    .staff-sales-bar { height: 5px; background: #f1f5f9; border-radius: 99px; margin-top: 10px; overflow: hidden; }
+    .staff-sales-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), #818cf8); transition: width 0.8s ease; }
+
+    /* 店舗サマリーKPI (横並び4つ) */
+    .store-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .store-kpi-item {
+      background: white; border-radius: 16px; padding: 14px; text-align: center;
+      border: 1.5px solid #e2e8f0;
+    }
+    .store-kpi-item-label { font-size: 8px; font-weight: 900; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .store-kpi-item-val { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 900; font-style: italic; color: var(--dark); }
+    .store-kpi-item-sub { font-size: 8px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
+
     /* ===== インセンティブ ===== */
     .incentive-card {
       background: white; border-radius: 22px; padding: 22px 18px;
       box-shadow: 0 4px 16px rgba(15,23,42,0.06); margin-top: 10px;
       border: 1.5px solid var(--mint-bd);
     }
-    .incentive-header {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
-    }
+    .incentive-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .incentive-badge {
       background: linear-gradient(135deg, #059669, #10b981); color: white;
-      padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 900;
-      letter-spacing: 0.05em;
+      padding: 6px 14px; border-radius: 12px; font-size: 10px; font-weight: 900; letter-spacing: 0.05em;
     }
-    .incentive-type {
-      font-size: 9px; font-weight: 700; color: #64748b;
-    }
+    .incentive-type { font-size: 9px; font-weight: 700; color: #64748b; }
     .incentive-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 0; border-bottom: 1px solid #f1f5f9;
@@ -224,9 +259,7 @@
       font-size: 10px; font-weight: 600; color: #92400e; line-height: 1.7;
     }
     .incentive-note i { margin-right: 4px; }
-    .incentive-tier-info {
-      margin-top: 10px; font-size: 9px; color: #94a3b8; font-weight: 600; text-align: center;
-    }
+    .incentive-tier-info { margin-top: 10px; font-size: 9px; color: #94a3b8; font-weight: 600; text-align: center; }
 
     /* ===== 頑張ったこと ===== */
     .effort-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 16px rgba(15,23,42,0.06); margin-top: 10px; }
@@ -354,13 +387,25 @@
     var roleLabel = _auth.role==='admin' ? ' (Admin)' : _auth.role==='manager' ? ' (店長)' : '';
     document.getElementById('hdr-name').textContent=_auth.staffName+roleLabel;
     document.getElementById('hdr-store').textContent=_auth.storeName||'';
-    // admin と manager はスタッフ選択を表示
-    if((_auth.role==='admin'||_auth.role==='manager') && _nippo && _nippo.staffList && _nippo.staffList.length>0){
+
+    var isMulti = (_auth.role==='admin'||_auth.role==='manager');
+    if(isMulti && _nippo && _nippo.staffList && _nippo.staffList.length>0){
       document.getElementById('admin-bar').style.display='block';
       var sel=document.getElementById('admin-staff-select');
-      sel.innerHTML='<option value="">--- スタッフを選択 ---</option>';
-      _nippo.staffList.forEach(function(s){ var o=document.createElement('option'); o.value=s.name; o.textContent=s.name+'（'+s.store+'）'; sel.appendChild(o); });
-      if(_nippo.staffList.length===1) sel.value=_nippo.staffList[0].name;
+      sel.innerHTML='';
+      // 店舗サマリーオプション（デフォルト）
+      var sumOpt = document.createElement('option');
+      sumOpt.value = '__summary__';
+      sumOpt.textContent = '\u{1F4CA} 店舗サマリー';
+      sel.appendChild(sumOpt);
+      // 個別スタッフ
+      _nippo.staffList.forEach(function(s){
+        var o=document.createElement('option');
+        o.value=s.name;
+        o.textContent=s.name+'（'+s.store+'）';
+        sel.appendChild(o);
+      });
+      sel.value = '__summary__';
     }
     buildMonthBar(); renderDashboard();
   }
@@ -389,7 +434,6 @@
     var tierLabel = '';
 
     if (isM) {
-      // most eyes テーブル
       if (totalSales >= 1100000) { salesIncentive = Math.round(totalSales * 0.11); tierLabel = '11%'; }
       else if (totalSales >= 1000000) { salesIncentive = 90000; tierLabel = '¥1,000,000 → 9%'; }
       else if (totalSales >= 950000)  { salesIncentive = 76000; tierLabel = '¥950,000 → 8%'; }
@@ -399,7 +443,6 @@
       else if (totalSales >= 750000)  { salesIncentive = 15000; tierLabel = '¥750,000 → 2%'; }
       else { tierLabel = '¥750,000未満'; }
     } else {
-      // SSIN / LUMISS テーブル
       if (totalSales >= 1100000) { salesIncentive = Math.round(totalSales * 0.10); tierLabel = '10%'; }
       else if (totalSales >= 1000000) { salesIncentive = 90000; tierLabel = '¥1,000,000 → 9%'; }
       else if (totalSales >= 950000)  { salesIncentive = 76000; tierLabel = '¥950,000 → 8%'; }
@@ -416,26 +459,151 @@
     var opIncentive = Math.round((opSales || 0) * 0.05);
     var total = salesIncentive + productIncentive + opIncentive;
 
-    return {
-      storeType: isM ? 'most eyes' : 'SSIN / LUMISS',
-      isM: isM,
-      salesIncentive: salesIncentive,
-      productIncentive: productIncentive,
-      opIncentive: opIncentive,
-      total: total,
-      tierLabel: tierLabel
-    };
+    return { storeType: isM ? 'most eyes' : 'SSIN / LUMISS', isM: isM, salesIncentive: salesIncentive, productIncentive: productIncentive, opIncentive: opIncentive, total: total, tierLabel: tierLabel };
   }
 
+  /* ===== メインルーター ===== */
   function renderDashboard(){
     var area=document.getElementById('data-area');
-    var ts=(_auth.role==='admin'||_auth.role==='manager')?document.getElementById('admin-staff-select').value:_auth.staffName;
-    _selectedStaff=ts;
-    if(!ts||!_selectedMonth||!_nippo){
-      area.innerHTML='<div class="empty"><i class="fas fa-user-clock"></i><p style="font-size:14px;font-weight:900">スタッフと月を選択してください</p></div>'; return;
+    var isMulti = (_auth.role==='admin'||_auth.role==='manager');
+    var selVal = isMulti ? document.getElementById('admin-staff-select').value : _auth.staffName;
+
+    if(!_selectedMonth||!_nippo){
+      area.innerHTML='<div class="empty"><i class="fas fa-calendar-alt"></i><p style="font-size:14px;font-weight:900">月を選択してください</p></div>';
+      return;
     }
+
+    // 店舗サマリー表示
+    if(isMulti && selVal === '__summary__'){
+      renderStoreSummary(area);
+      return;
+    }
+
+    // スタッフ未選択（staff権限）
+    if(!selVal){
+      area.innerHTML='<div class="empty"><i class="fas fa-user-clock"></i><p style="font-size:14px;font-weight:900">スタッフを選択してください</p></div>';
+      return;
+    }
+
+    _selectedStaff=selVal;
+    renderIndividual(area, selVal);
+  }
+
+  /* ========================================================
+     店舗サマリー表示
+     ======================================================== */
+  function renderStoreSummary(area){
+    // 選択月の全スタッフデータを集計
+    var staffDataList = [];
+    var storeTotal = { sales:0, guests:0, newGuests:0, repeatGuests:0, newNextRes:0, repeatNextRes:0, productSales:0, opSales:0, ticketSales:0, workDays:0, storeName:'' };
+
+    for(var key in _nippo.monthlyData){
+      var parts = key.split('___');
+      if(parts[0] !== _selectedMonth) continue;
+      var d = _nippo.monthlyData[key];
+      staffDataList.push(d);
+      storeTotal.sales += d.totalSales||0;
+      storeTotal.guests += d.totalGuests||0;
+      storeTotal.newGuests += d.newGuests||0;
+      storeTotal.repeatGuests += d.repeatGuests||0;
+      storeTotal.newNextRes += d.newNextRes||0;
+      storeTotal.repeatNextRes += d.repeatNextRes||0;
+      storeTotal.productSales += d.productSales||0;
+      storeTotal.opSales += d.opSales||0;
+      storeTotal.ticketSales += d.ticketSales||0;
+      storeTotal.workDays += d.workDays||0;
+      if(!storeTotal.storeName) storeTotal.storeName = d.storeName;
+    }
+
+    // 売上降順ソート
+    staffDataList.sort(function(a,b){ return (b.totalSales||0)-(a.totalSales||0); });
+
+    var totalNextRes = storeTotal.newNextRes + storeTotal.repeatNextRes;
+    var storeNextResRate = storeTotal.guests > 0 ? totalNextRes / storeTotal.guests : 0;
+    var storeUnitPrice = storeTotal.guests > 0 ? Math.round(storeTotal.sales / storeTotal.guests) : 0;
+    var storeProductRate = storeTotal.sales > 0 ? storeTotal.productSales / storeTotal.sales : 0;
+    var monthLabel = _selectedMonth.replace('-','年')+'月';
+
+    document.getElementById('hdr-store').textContent = (storeTotal.storeName||'') + ' / ' + monthLabel;
+
+    if(!staffDataList.length){
+      area.innerHTML='<div class="empty"><i class="fas fa-search"></i><p style="font-size:14px;font-weight:900">'+monthLabel+'のデータがありません</p></div>';
+      return;
+    }
+
+    var maxSales = staffDataList[0].totalSales || 1;
+
+    var h = '<div class="fade-in">';
+
+    // ===== 店舗合計KGI =====
+    h+='<div class="kgi-card store-card"><p class="kgi-label"><i class="fas fa-store" style="margin-right:4px"></i>Store Total - '+esc(monthLabel)+'</p>'
+      +'<p class="kgi-value">¥'+num(storeTotal.sales)+'</p>'
+      +'<p class="kgi-sub">スタッフ '+staffDataList.length+'名 ／ 総出勤 '+storeTotal.workDays+'日</p>'
+      +'<div class="kgi-pills">'
+      +'<span class="kgi-pill"><i class="fas fa-users" style="margin-right:4px"></i>総客数 '+storeTotal.guests+'人</span>'
+      +'<span class="kgi-pill"><i class="fas fa-coins" style="margin-right:4px"></i>客単価 ¥'+num(storeUnitPrice)+'</span>'
+      +'<span class="kgi-pill"><i class="fas fa-calendar-check" style="margin-right:4px"></i>次回予約率 '+pct(storeNextResRate)+'</span>'
+      +'</div></div>';
+
+    // ===== 店舗KPI =====
+    h+='<div class="store-kpi-row">'
+      +'<div class="store-kpi-item"><p class="store-kpi-item-label">新規客数</p><p class="store-kpi-item-val">'+storeTotal.newGuests+'<span style="font-size:11px;font-style:normal">人</span></p></div>'
+      +'<div class="store-kpi-item"><p class="store-kpi-item-label">再来客数</p><p class="store-kpi-item-val">'+storeTotal.repeatGuests+'<span style="font-size:11px;font-style:normal">人</span></p></div>'
+      +'<div class="store-kpi-item"><p class="store-kpi-item-label">物販売上</p><p class="store-kpi-item-val">¥'+num(storeTotal.productSales)+'</p><p class="store-kpi-item-sub">物販率 '+pct(storeProductRate)+'</p></div>'
+      +'<div class="store-kpi-item"><p class="store-kpi-item-label">回数券売上</p><p class="store-kpi-item-val">¥'+num(storeTotal.ticketSales)+'</p></div>'
+      +'</div>';
+
+    // ===== スタッフ別一覧 =====
+    h+='<div class="section"><span class="section-chip chip-store"><i class="fas fa-users"></i> スタッフ別実績</span>';
+
+    staffDataList.forEach(function(d, idx){
+      var tg = d.totalGuests||0;
+      var nr = (d.newNextRes||0)+(d.repeatNextRes||0);
+      var nrRate = tg > 0 ? nr/tg : 0;
+      var unitP = tg > 0 ? Math.round(d.totalSales/tg) : 0;
+      var salesPct = maxSales > 0 ? Math.round((d.totalSales/maxSales)*100) : 0;
+      var nrClass = nrRate >= 0.5 ? 'good' : nrRate >= 0.35 ? 'warn' : 'bad';
+      var rank = idx + 1;
+
+      h+='<div class="staff-card" onclick="selectStaff(\''+escJs(d.staffName)+'\')">'
+        +'<div class="staff-card-top">'
+        +'<div class="staff-card-avatar">'+rank+'</div>'
+        +'<div><p class="staff-card-name">'+esc(d.staffName)+'</p>'
+        +'<p style="font-size:8px;color:#94a3b8;font-weight:700;margin-top:1px">出勤 '+d.workDays+'日</p></div>'
+        +'<div class="staff-card-right"><p class="staff-card-sales">¥'+num(d.totalSales)+'</p></div>'
+        +'</div>'
+        +'<div class="staff-card-metrics">'
+        +'<div class="staff-card-metric"><p class="staff-card-metric-label">客数</p><p class="staff-card-metric-val neutral">'+tg+'</p></div>'
+        +'<div class="staff-card-metric"><p class="staff-card-metric-label">次回予約</p><p class="staff-card-metric-val '+nrClass+'">'+pct(nrRate)+'</p></div>'
+        +'<div class="staff-card-metric"><p class="staff-card-metric-label">客単価</p><p class="staff-card-metric-val neutral">¥'+num(unitP)+'</p></div>'
+        +'<div class="staff-card-metric"><p class="staff-card-metric-label">物販率</p><p class="staff-card-metric-val '+(d.productRate>=0.13?'good':d.productRate>=0.10?'warn':'bad')+'">'+pct(d.productRate)+'</p></div>'
+        +'</div>'
+        +'<div class="staff-sales-bar"><div class="staff-sales-bar-fill" style="width:'+salesPct+'%"></div></div>'
+        +'<div class="staff-card-arrow"><i class="fas fa-chevron-right"></i></div>'
+        +'</div>';
+    });
+
+    h+='</div>';
+    h+='</div>';
+    area.innerHTML=h;
+  }
+
+  /* スタッフカードタップ → 個別ビューへ */
+  function selectStaff(name){
+    var sel = document.getElementById('admin-staff-select');
+    if(sel){ sel.value = name; }
+    renderDashboard();
+  }
+
+  /* ========================================================
+     個別スタッフ表示
+     ======================================================== */
+  function renderIndividual(area, ts){
     var d=_nippo.monthlyData[_selectedMonth+'___'+ts];
-    if(!d){ area.innerHTML='<div class="empty"><i class="fas fa-search"></i><p style="font-size:14px;font-weight:900">データがありません</p><p style="font-size:10px;margin-top:8px;opacity:0.6">'+ts+' / '+_selectedMonth.replace('-','年')+'月</p></div>'; return; }
+    if(!d){
+      area.innerHTML='<div class="empty"><i class="fas fa-search"></i><p style="font-size:14px;font-weight:900">データがありません</p><p style="font-size:10px;margin-top:8px;opacity:0.6">'+esc(ts)+' / '+_selectedMonth.replace('-','年')+'月</p></div>';
+      return;
+    }
     document.getElementById('hdr-store').textContent=d.storeName+' / '+_selectedMonth.replace('-','年')+'月';
 
     var totalGuests = d.totalGuests || 0;
@@ -443,7 +611,7 @@
 
     var h='<div class="fade-in">';
 
-    // ===== KGI 売上カード =====
+    // KGI
     h+='<div class="kgi-card"><p class="kgi-label">Monthly Sales</p>'
       +'<p class="kgi-value">¥'+num(d.totalSales)+'</p>'
       +'<p class="kgi-sub">出勤 '+d.workDays+'日 ／ 日平均 ¥'+num(Math.round(d.avgSalesPerDay))+'</p>'
@@ -454,23 +622,20 @@
       +'<span class="kgi-pill"><i class="fas fa-coins" style="margin-right:4px"></i>客単価 ¥'+num(avgUnitPrice)+'</span>'
       +'</div></div>';
 
-    // ===== 次回予約率ハイライト =====
+    // 次回予約率
     var nextResTotal = (d.newNextRes||0) + (d.repeatNextRes||0);
     h+='<div class="next-res-card">'
-      +'<div class="next-res-top">'
-      +'<div class="next-res-left">'
+      +'<div class="next-res-top"><div>'
       +'<p class="next-res-label"><i class="fas fa-calendar-check" style="margin-right:4px"></i>次回予約率</p>'
       +'<p class="next-res-value">'+pct(d.nextResRate)+'</p>'
       +'<p class="next-res-count">'+nextResTotal+' / '+totalGuests+'客</p>'
-      +'</div>'
-      +'<div class="next-res-icon"><i class="fas fa-calendar-check"></i></div>'
-      +'</div>'
+      +'</div><div class="next-res-icon"><i class="fas fa-calendar-check"></i></div></div>'
       +'<div class="next-res-breakdown">'
       +'<div class="next-res-sub"><p class="next-res-sub-label">新規</p><p class="next-res-sub-val">'+pct(d.newNextResRate)+'</p><p class="next-res-sub-detail">'+d.newNextRes+' / '+d.newGuests+'人</p></div>'
       +'<div class="next-res-sub"><p class="next-res-sub-label">再来</p><p class="next-res-sub-val">'+pct(d.repeatNextResRate)+'</p><p class="next-res-sub-detail">'+d.repeatNextRes+' / '+d.repeatGuests+'人</p></div>'
       +'</div></div>';
 
-    // ===== 客数セクション =====
+    // 客数
     h+='<div class="section"><span class="section-chip chip-guest"><i class="fas fa-users"></i> 客数</span>'
       +'<div class="kpi-grid">'
       +kpi('新規客数',d.newGuests+'人','全体の '+pct(totalGuests>0?d.newGuests/totalGuests:0),'guest')
@@ -479,7 +644,7 @@
       +kpi('総客数',totalGuests+'人','日平均 '+((d.avgGuestsPerDay||0).toFixed(1))+'人','guest')
       +'</div></div>';
 
-    // ===== 単価セクション =====
+    // 単価
     h+='<div class="section"><span class="section-chip chip-add"><i class="fas fa-yen-sign"></i> 単価・売上内訳</span>'
       +'<div class="kpi-grid">'
       +kpi('客単価','¥'+num(avgUnitPrice),'総売上 ÷ 総客数','add')
@@ -488,50 +653,23 @@
       +kpi('回数券売上','¥'+num(d.ticketSales),'初回'+d.firstTicket+'件 継続'+d.continueTicket+'件','add')
       +'</div></div>';
 
-    // ===== インセンティブセクション =====
+    // インセンティブ
     var inc = calcIncentive(d.storeName, d.totalSales, d.productSales, d.opSales);
-    h+='<div class="section"><span class="section-chip chip-money"><i class="fas fa-hand-holding-usd"></i> 想定インセンティブ</span>';
-    h+='<div class="incentive-card">';
-    h+='<div class="incentive-header">'
-      +'<span class="incentive-badge"><i class="fas fa-calculator" style="margin-right:4px"></i>歩合計算</span>'
-      +'<span class="incentive-type">'+esc(inc.storeType)+' テーブル適用</span>'
-      +'</div>';
+    h+='<div class="section"><span class="section-chip chip-money"><i class="fas fa-hand-holding-usd"></i> 想定インセンティブ</span>'
+      +'<div class="incentive-card">'
+      +'<div class="incentive-header"><span class="incentive-badge"><i class="fas fa-calculator" style="margin-right:4px"></i>歩合計算</span>'
+      +'<span class="incentive-type">'+esc(inc.storeType)+' テーブル適用</span></div>'
+      +'<div class="incentive-row"><span class="incentive-row-label">売上歩合<small>'+esc(inc.tierLabel)+'</small></span><span class="incentive-row-val">¥'+num(inc.salesIncentive)+'</span></div>'
+      +'<div class="incentive-row"><span class="incentive-row-label">物販歩合<small>5%</small></span><span class="incentive-row-val">¥'+num(inc.productIncentive)+'</span></div>'
+      +'<div class="incentive-row"><span class="incentive-row-label">OP歩合<small>5%</small></span><span class="incentive-row-val">¥'+num(inc.opIncentive)+'</span></div>'
+      +'<div class="incentive-row" style="opacity:0.5"><span class="incentive-row-label">店長手当<small>該当者のみ</small></span><span class="incentive-row-val" style="font-size:11px;color:#94a3b8">¥20,000</span></div>'
+      +'<div class="incentive-row" style="opacity:0.5"><span class="incentive-row-label">指名料<small>100% ※データ外</small></span><span class="incentive-row-val" style="font-size:11px;color:#94a3b8">---</span></div>'
+      +'<div class="incentive-total"><span class="incentive-total-label"><i class="fas fa-coins" style="margin-right:6px;color:var(--mint-col)"></i>想定合計（売上+物販+OP）</span><span class="incentive-total-val">¥'+num(inc.total)+'</span></div>'
+      +'<div class="incentive-tier-info">現在の売上 ¥'+num(d.totalSales)+' → '+esc(inc.tierLabel)+'</div>'
+      +'<div class="incentive-note"><i class="fas fa-exclamation-triangle"></i>上記は日報データに基づく概算です。集計方法や締め日の違いにより、実際の給与明細とは金額が異なる場合があります。店長手当（¥20,000）・指名料（100%）は別途加算されます。</div>'
+      +'</div></div>';
 
-    h+='<div class="incentive-row">'
-      +'<span class="incentive-row-label">売上歩合<small>'+esc(inc.tierLabel)+'</small></span>'
-      +'<span class="incentive-row-val">¥'+num(inc.salesIncentive)+'</span></div>';
-
-    h+='<div class="incentive-row">'
-      +'<span class="incentive-row-label">物販歩合<small>5%</small></span>'
-      +'<span class="incentive-row-val">¥'+num(inc.productIncentive)+'</span></div>';
-
-    h+='<div class="incentive-row">'
-      +'<span class="incentive-row-label">OP歩合<small>5%</small></span>'
-      +'<span class="incentive-row-val">¥'+num(inc.opIncentive)+'</span></div>';
-
-    h+='<div class="incentive-row" style="opacity:0.5">'
-      +'<span class="incentive-row-label">店長手当<small>該当者のみ</small></span>'
-      +'<span class="incentive-row-val" style="font-size:11px;color:#94a3b8">¥20,000</span></div>';
-
-    h+='<div class="incentive-row" style="opacity:0.5">'
-      +'<span class="incentive-row-label">指名料<small>100% ※データ外</small></span>'
-      +'<span class="incentive-row-val" style="font-size:11px;color:#94a3b8">---</span></div>';
-
-    h+='<div class="incentive-total">'
-      +'<span class="incentive-total-label"><i class="fas fa-coins" style="margin-right:6px;color:var(--mint-col)"></i>想定合計（売上+物販+OP）</span>'
-      +'<span class="incentive-total-val">¥'+num(inc.total)+'</span></div>';
-
-    h+='<div class="incentive-tier-info">'
-      +'現在の売上 ¥'+num(d.totalSales)+' → '+esc(inc.tierLabel)+'</div>';
-
-    h+='<div class="incentive-note">'
-      +'<i class="fas fa-exclamation-triangle"></i>'
-      +'上記は日報データに基づく概算です。集計方法や締め日の違いにより、実際の給与明細とは金額が異なる場合があります。'
-      +'店長手当（¥20,000）・指名料（100%）は別途加算されます。</div>';
-
-    h+='</div></div>';
-
-    // ===== 頑張ったこと =====
+    // 頑張ったこと
     h+='<div class="section"><span class="section-chip chip-fire"><i class="fas fa-fire"></i> 頑張ったこと</span>';
     h+='<div class="effort-card">';
     if(d.efforts&&d.efforts.length>0){
@@ -558,11 +696,7 @@
       var cls=threshold?(rate>=threshold*1.3?'green':rate>=threshold?'yellow':'red'):'green';
       barHtml='<div class="pbar"><div class="pbar-fill '+cls+'" style="width:'+pctW+'%"></div></div>';
     }
-    return '<div class="kpi '+type+'">'
-      +'<p class="kpi-label '+type+'">'+label+'</p>'
-      +'<p class="kpi-val '+type+'">'+value+'</p>'
-      +'<p class="kpi-sub">'+sub+'</p>'
-      +barHtml+'</div>';
+    return '<div class="kpi '+type+'"><p class="kpi-label '+type+'">'+label+'</p><p class="kpi-val '+type+'">'+value+'</p><p class="kpi-sub">'+sub+'</p>'+barHtml+'</div>';
   }
 
   function pct(v){ return Math.round((v||0)*100)+'%'; }
