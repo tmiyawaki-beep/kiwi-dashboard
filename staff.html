@@ -332,7 +332,7 @@
     btn.disabled=true; btn.innerHTML='<span class="spinner"></span>'; err.textContent='';
     fetchAPI('staffAuth',{pin:pin},function(d){
       btn.disabled=false; btn.innerHTML='ログイン';
-      if(d.valid){ _auth={staffName:d.staffName,role:d.role}; loadData(); }
+      if(d.valid){ _auth={staffName:d.staffName,role:d.role,storeName:d.storeName||''}; loadData(); }
       else{ err.textContent=d.error||'PINが正しくありません'; document.getElementById('pin-input').value=''; document.getElementById('pin-input').focus(); }
     });
   }
@@ -351,9 +351,11 @@
     document.getElementById('dashboard').style.display='block';
     var initial = _auth.staffName.charAt(0);
     document.getElementById('hdr-avatar').textContent = initial;
-    document.getElementById('hdr-name').textContent=_auth.staffName+(_auth.role==='admin'?' (Admin)':'');
-    document.getElementById('hdr-store').textContent='';
-    if(_auth.role==='admin' && _nippo && _nippo.staffList && _nippo.staffList.length>0){
+    var roleLabel = _auth.role==='admin' ? ' (Admin)' : _auth.role==='manager' ? ' (店長)' : '';
+    document.getElementById('hdr-name').textContent=_auth.staffName+roleLabel;
+    document.getElementById('hdr-store').textContent=_auth.storeName||'';
+    // admin と manager はスタッフ選択を表示
+    if((_auth.role==='admin'||_auth.role==='manager') && _nippo && _nippo.staffList && _nippo.staffList.length>0){
       document.getElementById('admin-bar').style.display='block';
       var sel=document.getElementById('admin-staff-select');
       sel.innerHTML='<option value="">--- スタッフを選択 ---</option>';
@@ -427,7 +429,7 @@
 
   function renderDashboard(){
     var area=document.getElementById('data-area');
-    var ts=_auth.role==='admin'?document.getElementById('admin-staff-select').value:_auth.staffName;
+    var ts=(_auth.role==='admin'||_auth.role==='manager')?document.getElementById('admin-staff-select').value:_auth.staffName;
     _selectedStaff=ts;
     if(!ts||!_selectedMonth||!_nippo){
       area.innerHTML='<div class="empty"><i class="fas fa-user-clock"></i><p style="font-size:14px;font-weight:900">スタッフと月を選択してください</p></div>'; return;
