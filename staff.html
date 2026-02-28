@@ -300,7 +300,56 @@
     .loading-box { background: white; border-radius: 24px; padding: 36px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .loading-box .spinner { width: 32px; height: 32px; border-width: 3px; border-color: rgba(109,40,217,0.15); border-top-color: var(--accent); }
     .loading-box p { margin-top: 14px; font-size: 12px; font-weight: 700; color: #64748b; }
+
+    /* ===== Admin全店舗ダッシュボード ===== */
+    .chart-wrap {
+      background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px;
+      border: 1.5px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15,23,42,0.06);
+    }
+    .chart-wrap h3 {
+      font-size: 11px; font-weight: 900; color: var(--dark); margin-bottom: 14px; letter-spacing: 0.05em;
+    }
+    .chart-canvas-wrap { position: relative; height: 220px; }
+
+    /* ランキングタブ */
+    .rank-tabs {
+      display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto;
+      padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+    }
+    .rank-tabs::-webkit-scrollbar { display: none; }
+    .rank-tab {
+      padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e2e8f0;
+      background: white; font-size: 10px; font-weight: 900; color: #94a3b8;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
+    }
+    .rank-tab:hover { border-color: #cbd5e1; color: #64748b; }
+    .rank-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    /* ランキングカード */
+    .rank-card {
+      display: flex; align-items: center; gap: 12px;
+      background: white; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px;
+      border: 1.5px solid #e2e8f0; cursor: pointer; transition: all 0.2s;
+    }
+    .rank-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(109,40,217,0.08); }
+    .rank-medal {
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 900; flex-shrink: 0;
+    }
+    .rank-medal.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+    .rank-medal.silver { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: white; }
+    .rank-medal.bronze { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+    .rank-medal.normal { background: #f1f5f9; color: #64748b; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-size: 13px; font-weight: 900; color: var(--dark); }
+    .rank-store { font-size: 8px; font-weight: 700; color: #94a3b8; margin-top: 1px; }
+    .rank-value {
+      font-family: 'Noto Serif JP', serif; font-size: 17px; font-weight: 900;
+      font-style: italic; color: var(--dark); text-align: right; flex-shrink: 0;
+    }
+    .rank-card-arrow { color: #cbd5e1; font-size: 10px; flex-shrink: 0; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -393,19 +442,51 @@
       document.getElementById('admin-bar').style.display='block';
       var sel=document.getElementById('admin-staff-select');
       sel.innerHTML='';
-      // 店舗サマリーオプション（デフォルト）
-      var sumOpt = document.createElement('option');
-      sumOpt.value = '__summary__';
-      sumOpt.textContent = '\u{1F4CA} 店舗サマリー';
-      sel.appendChild(sumOpt);
-      // 個別スタッフ
-      _nippo.staffList.forEach(function(s){
-        var o=document.createElement('option');
-        o.value=s.name;
-        o.textContent=s.name+'（'+s.store+'）';
-        sel.appendChild(o);
-      });
-      sel.value = '__summary__';
+
+      if(_auth.role==='admin'){
+        // 全店舗ダッシュボード（デフォルト）
+        var allOpt=document.createElement('option');
+        allOpt.value='__all_stores__';
+        allOpt.textContent='\u{1F4CA} 全店舗ダッシュボード';
+        sel.appendChild(allOpt);
+        // 店舗別サマリー
+        var stores={};
+        _nippo.staffList.forEach(function(s){ stores[s.store]=true; });
+        var storeList=Object.keys(stores).sort();
+        var storeGrp=document.createElement('optgroup');
+        storeGrp.label='── 店舗サマリー ──';
+        storeList.forEach(function(sn){
+          var o=document.createElement('option');
+          o.value='__store__'+sn;
+          o.textContent='\u{1F3E2} '+sn;
+          storeGrp.appendChild(o);
+        });
+        sel.appendChild(storeGrp);
+        // スタッフ個別
+        var staffGrp=document.createElement('optgroup');
+        staffGrp.label='── スタッフ個別 ──';
+        _nippo.staffList.forEach(function(s){
+          var o=document.createElement('option');
+          o.value=s.name;
+          o.textContent=s.name+'（'+s.store+'）';
+          staffGrp.appendChild(o);
+        });
+        sel.appendChild(staffGrp);
+        sel.value='__all_stores__';
+      } else {
+        // 店長: 店舗サマリー（デフォルト）+ 個別スタッフ
+        var sumOpt=document.createElement('option');
+        sumOpt.value='__summary__';
+        sumOpt.textContent='\u{1F4CA} 店舗サマリー';
+        sel.appendChild(sumOpt);
+        _nippo.staffList.forEach(function(s){
+          var o=document.createElement('option');
+          o.value=s.name;
+          o.textContent=s.name+'（'+s.store+'）';
+          sel.appendChild(o);
+        });
+        sel.value='__summary__';
+      }
     }
     buildMonthBar(); renderDashboard();
   }
@@ -464,6 +545,7 @@
 
   /* ===== メインルーター ===== */
   function renderDashboard(){
+    _adminCharts.forEach(function(c){c.destroy();}); _adminCharts=[];
     var area=document.getElementById('data-area');
     var isMulti = (_auth.role==='admin'||_auth.role==='manager');
     var selVal = isMulti ? document.getElementById('admin-staff-select').value : _auth.staffName;
@@ -473,9 +555,19 @@
       return;
     }
 
-    // 店舗サマリー表示
+    // admin全店舗ダッシュボード
+    if(isMulti && selVal === '__all_stores__'){
+      renderAllStoresDashboard(area);
+      return;
+    }
+
+    // 店舗別サマリー（admin: per-store / manager: own store）
     if(isMulti && selVal === '__summary__'){
       renderStoreSummary(area);
+      return;
+    }
+    if(isMulti && selVal.indexOf('__store__')===0){
+      renderStoreSummary(area, selVal.substring(9));
       return;
     }
 
@@ -492,8 +584,8 @@
   /* ========================================================
      店舗サマリー表示
      ======================================================== */
-  function renderStoreSummary(area){
-    // 選択月の全スタッフデータを集計
+  function renderStoreSummary(area, filterStore){
+    // 選択月の全スタッフデータを集計（filterStoreで店舗絞り込み可）
     var staffDataList = [];
     var storeTotal = { sales:0, guests:0, newGuests:0, repeatGuests:0, newNextRes:0, repeatNextRes:0, productSales:0, opSales:0, ticketSales:0, workDays:0, storeName:'' };
 
@@ -501,6 +593,7 @@
       var parts = key.split('___');
       if(parts[0] !== _selectedMonth) continue;
       var d = _nippo.monthlyData[key];
+      if(filterStore && d.storeName !== filterStore) continue;
       staffDataList.push(d);
       storeTotal.sales += d.totalSales||0;
       storeTotal.guests += d.totalGuests||0;
@@ -713,8 +806,256 @@
     });
   }
 
+  /* ========================================================
+     Admin全店舗ダッシュボード
+     ======================================================== */
+  var _adminCharts = [];
+  var _allStaffRanking = [];
+
+  function getStoreColor(name){
+    var n=(name||'').toLowerCase();
+    if(n.indexOf('most')>=0||n.charAt(0)==='m') return {bg:'rgba(109,40,217,0.75)',bd:'#6d28d9'};
+    if(n.indexOf('ssin')>=0||n.charAt(0)==='s') return {bg:'rgba(29,95,212,0.75)',bd:'#1d5fd4'};
+    if(n.indexOf('lumiss')>=0||n.charAt(0)==='l') return {bg:'rgba(16,185,129,0.75)',bd:'#10b981'};
+    return {bg:'rgba(100,116,139,0.75)',bd:'#64748b'};
+  }
+
+  function renderAllStoresDashboard(area){
+    var storeMap={};
+    var allStaff=[];
+
+    for(var key in _nippo.monthlyData){
+      var parts=key.split('___');
+      if(parts[0]!==_selectedMonth) continue;
+      var d=_nippo.monthlyData[key];
+      var sn=d.storeName||'Unknown';
+
+      if(!storeMap[sn]){
+        storeMap[sn]={sales:0,guests:0,newGuests:0,repeatGuests:0,newNextRes:0,repeatNextRes:0,productSales:0,opSales:0,ticketSales:0,workDays:0,staffCount:0};
+      }
+      var st=storeMap[sn];
+      st.sales+=d.totalSales||0;
+      st.guests+=d.totalGuests||0;
+      st.newGuests+=d.newGuests||0;
+      st.repeatGuests+=d.repeatGuests||0;
+      st.newNextRes+=d.newNextRes||0;
+      st.repeatNextRes+=d.repeatNextRes||0;
+      st.productSales+=d.productSales||0;
+      st.opSales+=d.opSales||0;
+      st.ticketSales+=d.ticketSales||0;
+      st.workDays+=d.workDays||0;
+      st.staffCount++;
+
+      var tg=d.totalGuests||0;
+      var nr=(d.newNextRes||0)+(d.repeatNextRes||0);
+      allStaff.push({
+        name:d.staffName, store:sn,
+        sales:d.totalSales||0, guests:tg,
+        nextResRate:tg>0?nr/tg:0,
+        unitPrice:tg>0?Math.round(d.totalSales/tg):0,
+        productRate:d.productRate||0
+      });
+    }
+
+    var storeNames=Object.keys(storeMap).sort();
+
+    // Grand totals
+    var grand={sales:0,guests:0,staffCount:0,newNextRes:0,repeatNextRes:0};
+    storeNames.forEach(function(sn){
+      var st=storeMap[sn];
+      grand.sales+=st.sales; grand.guests+=st.guests; grand.staffCount+=st.staffCount;
+      grand.newNextRes+=st.newNextRes; grand.repeatNextRes+=st.repeatNextRes;
+    });
+    var grandNextResRate=grand.guests>0?(grand.newNextRes+grand.repeatNextRes)/grand.guests:0;
+    var grandUnitPrice=grand.guests>0?Math.round(grand.sales/grand.guests):0;
+    var monthLabel=_selectedMonth.replace('-','年')+'月';
+
+    document.getElementById('hdr-store').textContent='全店舗 / '+monthLabel;
+
+    if(!storeNames.length){
+      area.innerHTML='<div class="empty"><i class="fas fa-search"></i><p style="font-size:14px;font-weight:900">'+monthLabel+'のデータがありません</p></div>';
+      return;
+    }
+
+    var h='<div class="fade-in">';
+
+    // === 1. 全体KGIカード ===
+    h+='<div class="kgi-card"><p class="kgi-label"><i class="fas fa-building" style="margin-right:4px"></i>All Stores - '+esc(monthLabel)+'</p>'
+      +'<p class="kgi-value">¥'+num(grand.sales)+'</p>'
+      +'<p class="kgi-sub">'+storeNames.length+'店舗 ／ '+grand.staffCount+'名</p>'
+      +'<div class="kgi-pills">'
+      +'<span class="kgi-pill"><i class="fas fa-users" style="margin-right:4px"></i>総客数 '+grand.guests+'人</span>'
+      +'<span class="kgi-pill"><i class="fas fa-coins" style="margin-right:4px"></i>平均客単価 ¥'+num(grandUnitPrice)+'</span>'
+      +'<span class="kgi-pill"><i class="fas fa-calendar-check" style="margin-right:4px"></i>次回予約率 '+pct(grandNextResRate)+'</span>'
+      +'</div></div>';
+
+    // === 2. 店舗別売上チャート ===
+    h+='<div class="chart-wrap"><h3><i class="fas fa-chart-bar" style="margin-right:6px;color:var(--accent)"></i>店舗別 売上比較</h3>'
+      +'<div class="chart-canvas-wrap"><canvas id="storeSalesChart"></canvas></div></div>';
+
+    // === 3. スタッフランキング ===
+    h+='<div class="chart-wrap"><h3><i class="fas fa-trophy" style="margin-right:6px;color:#f59e0b"></i>スタッフランキング</h3>'
+      +'<div class="rank-tabs" id="rank-tabs">'
+      +'<button class="rank-tab active" data-rank="sales" onclick="switchRankTab(\'sales\')">売上</button>'
+      +'<button class="rank-tab" data-rank="guests" onclick="switchRankTab(\'guests\')">客数</button>'
+      +'<button class="rank-tab" data-rank="nextResRate" onclick="switchRankTab(\'nextResRate\')">次回予約率</button>'
+      +'<button class="rank-tab" data-rank="unitPrice" onclick="switchRankTab(\'unitPrice\')">客単価</button>'
+      +'<button class="rank-tab" data-rank="productRate" onclick="switchRankTab(\'productRate\')">物販率</button>'
+      +'</div>'
+      +'<div id="rank-list"></div></div>';
+
+    // === 4. 次回予約率 店舗比較 ===
+    h+='<div class="chart-wrap"><h3><i class="fas fa-calendar-check" style="margin-right:6px;color:var(--green)"></i>次回予約率 店舗比較</h3>'
+      +'<div class="chart-canvas-wrap"><canvas id="storeNextResChart"></canvas></div></div>';
+
+    // === 5. 客単価 店舗比較 ===
+    h+='<div class="chart-wrap"><h3><i class="fas fa-coins" style="margin-right:6px;color:var(--blue)"></i>客単価 店舗比較</h3>'
+      +'<div class="chart-canvas-wrap"><canvas id="storeUnitPriceChart"></canvas></div></div>';
+
+    h+='</div>';
+    area.innerHTML=h;
+
+    _allStaffRanking=allStaff;
+    switchRankTab('sales');
+
+    setTimeout(function(){ renderAllStoresCharts(storeNames,storeMap); },0);
+  }
+
+  function renderAllStoresCharts(storeNames,storeMap){
+    _adminCharts.forEach(function(c){c.destroy();});
+    _adminCharts=[];
+    var storeColors=storeNames.map(function(sn){return getStoreColor(sn);});
+
+    // 35%基準線プラグイン
+    var refLine35={
+      id:'refLine35',
+      afterDraw:function(chart){
+        var yScale=chart.scales.y;
+        var y=yScale.getPixelForValue(35);
+        var ctx=chart.ctx;
+        ctx.save();
+        ctx.setLineDash([5,4]);
+        ctx.strokeStyle='rgba(15,23,42,0.35)';
+        ctx.lineWidth=1.5;
+        ctx.beginPath();
+        ctx.moveTo(chart.chartArea.left,y);
+        ctx.lineTo(chart.chartArea.right,y);
+        ctx.stroke();
+        ctx.fillStyle='rgba(15,23,42,0.5)';
+        ctx.font='700 9px Noto Sans JP';
+        ctx.textAlign='right';
+        ctx.fillText('目標 35%',chart.chartArea.right-4,y-5);
+        ctx.restore();
+      }
+    };
+
+    // 1. 店舗別売上（横棒）
+    var ctx1=document.getElementById('storeSalesChart');
+    if(ctx1){
+      _adminCharts.push(new Chart(ctx1,{
+        type:'bar',
+        data:{
+          labels:storeNames,
+          datasets:[{
+            data:storeNames.map(function(sn){return storeMap[sn].sales;}),
+            backgroundColor:storeColors.map(function(c){return c.bg;}),
+            borderColor:storeColors.map(function(c){return c.bd;}),
+            borderWidth:1.5, borderRadius:8
+          }]
+        },
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return '¥'+ctx.raw.toLocaleString();}}}},
+          scales:{
+            x:{ticks:{callback:function(v){return '¥'+(v/10000).toLocaleString()+'万';},font:{size:10,weight:700}},grid:{color:'rgba(0,0,0,0.04)'}},
+            y:{ticks:{font:{size:11,weight:900,family:'Noto Sans JP'}},grid:{display:false}}
+          }
+        }
+      }));
+    }
+
+    // 2. 次回予約率（棒グラフ + 35%基準線）
+    var ctx2=document.getElementById('storeNextResChart');
+    if(ctx2){
+      var nrData=storeNames.map(function(sn){
+        var st=storeMap[sn];
+        return st.guests>0?Math.round((st.newNextRes+st.repeatNextRes)/st.guests*100):0;
+      });
+      var nrColors=nrData.map(function(v){
+        return v>=50?'rgba(109,40,217,0.75)':v>=35?'rgba(34,197,94,0.75)':'rgba(255,59,48,0.75)';
+      });
+      _adminCharts.push(new Chart(ctx2,{
+        type:'bar',
+        data:{labels:storeNames,datasets:[{data:nrData,backgroundColor:nrColors,borderRadius:8}]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.raw+'%';}}}},
+          scales:{
+            y:{max:100,ticks:{callback:function(v){return v+'%';},font:{size:10,weight:700}},grid:{color:'rgba(0,0,0,0.04)'}},
+            x:{ticks:{font:{size:11,weight:900,family:'Noto Sans JP'}},grid:{display:false}}
+          }
+        },
+        plugins:[refLine35]
+      }));
+    }
+
+    // 3. 客単価（棒グラフ）
+    var ctx3=document.getElementById('storeUnitPriceChart');
+    if(ctx3){
+      var upData=storeNames.map(function(sn){
+        var st=storeMap[sn];
+        return st.guests>0?Math.round(st.sales/st.guests):0;
+      });
+      _adminCharts.push(new Chart(ctx3,{
+        type:'bar',
+        data:{
+          labels:storeNames,
+          datasets:[{data:upData,backgroundColor:storeColors.map(function(c){return c.bg;}),borderColor:storeColors.map(function(c){return c.bd;}),borderWidth:1.5,borderRadius:8}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return '¥'+ctx.raw.toLocaleString();}}}},
+          scales:{
+            y:{ticks:{callback:function(v){return '¥'+v.toLocaleString();},font:{size:10,weight:700}},grid:{color:'rgba(0,0,0,0.04)'}},
+            x:{ticks:{font:{size:11,weight:900,family:'Noto Sans JP'}},grid:{display:false}}
+          }
+        }
+      }));
+    }
+  }
+
+  function switchRankTab(metric){
+    var tabs=document.querySelectorAll('#rank-tabs .rank-tab');
+    tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-rank')===metric);});
+    var sorted=_allStaffRanking.slice().sort(function(a,b){return (b[metric]||0)-(a[metric]||0);});
+    var top=sorted.slice(0,10);
+    var list=document.getElementById('rank-list');
+    if(!list) return;
+
+    var h='';
+    top.forEach(function(s,i){
+      var rank=i+1;
+      var medalClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'normal';
+      var val='';
+      if(metric==='sales') val='¥'+num(s.sales);
+      else if(metric==='guests') val=s.guests+'人';
+      else if(metric==='nextResRate') val=pct(s.nextResRate);
+      else if(metric==='unitPrice') val='¥'+num(s.unitPrice);
+      else if(metric==='productRate') val=pct(s.productRate);
+
+      h+='<div class="rank-card" onclick="selectStaff(\''+escJs(s.name)+'\')">'
+        +'<div class="rank-medal '+medalClass+'">'+rank+'</div>'
+        +'<div class="rank-info"><p class="rank-name">'+esc(s.name)+'</p><p class="rank-store">'+esc(s.store)+'</p></div>'
+        +'<div class="rank-value">'+val+'</div>'
+        +'<div class="rank-card-arrow"><i class="fas fa-chevron-right"></i></div>'
+        +'</div>';
+    });
+    list.innerHTML=h;
+  }
+
   function doLogout(){
     _pin=''; _auth=null; _nippo=null;
+    _adminCharts.forEach(function(c){c.destroy();}); _adminCharts=[]; _allStaffRanking=[];
     document.getElementById('dashboard').style.display='none';
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('pin-input').value='';
